@@ -1,21 +1,11 @@
 {
-  "name": "Atlas Parent Live Tracker",
-  "short_name": "Parent Tracker",
-  "description": "Live attendance tracking system for parents.",
-  "start_url": "./parent.html",
+  "background_color": "#ffffff",
+  "dir": "ltr",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#ffc107",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "name": "Atlas Parent Tracker",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Parent Tracker",
+  "start_url": "parent.html",
+  "theme_color": "#ffffff"
 }
