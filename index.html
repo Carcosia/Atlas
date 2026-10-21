@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart School Attendance Portal</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- HTML5-QRCode Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .role-card { cursor: pointer; transition: all 0.2s ease-in-out; border-radius: 12px; }
+    .role-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .portal-section { display: none; }
+    .portal-section.active { display: block; }
+    #reader { max-width: 420px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-dark bg-dark px-4 py-3 mb-4 shadow-sm">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <span class="navbar-brand mb-0 h1 fw-bold">
+        <i class="fa-solid fa-graduation-cap me-2 text-primary"></i>Attendance System
+      </span>
+      <button class="btn btn-outline-light btn-sm" onclick="showSection('roleSelection')">
+        <i class="fa-solid fa-house me-1"></i> Home
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- 1. MAIN ROLE SELECTION -->
+    <div id="roleSelection" class="portal-section active">
+      <div class="text-center my-4">
+        <h2 class="fw-bold text-dark">Welcome to School Attendance Portal</h2>
+        <p class="text-muted">Select your portal to continue</p>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+        <!-- Standalone Scanner -->
+        <div class="col-md-3">
+          <div class="card role-card text-center p-4 border-danger shadow-sm" onclick="showSection('scannerPortal')">
+            <i class="fa-solid fa-qrcode text-danger display-4 mb-3"></i>
+            <h5 class="fw-bold text-danger">LIVE SCANNER</h5>
+            <p class="text-muted small">Scan student QR codes using real-time camera.</p>
+          </div>
+        </div>
+
+        <!-- Subject Teacher Dashboard -->
+        <div class="col-md-3">
+          <div class="card role-card text-center p-4 border-primary shadow-sm" onclick="showSection('teacherPortal')">
+            <i class="fa-solid fa-chalkboard-user text-primary display-4 mb-3"></i>
+            <h5 class="fw-bold text-primary">TEACHER PORTAL</h5>
+            <p class="text-muted small">View real-time section logs and summary counts.</p>
+          </div>
+        </div>
+
+        <!-- Student Registration -->
+        <div class="col-md-3">
+          <div class="card role-card text-center p-4 border-success shadow-sm" onclick="showSection('studentPortal')">
+            <i class="fa-solid fa-id-card text-success display-4 mb-3"></i>
+            <h5 class="fw-bold text-success">STUDENT PORTAL</h5>
+            <p class="text-muted small">Register student LRN and generate digital QR ID.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. STANDALONE SCANNER PORTAL -->
+    <div id="scannerPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div id="scannerAuthCard" class="card shadow-sm p-4">
+            <h4 class="fw-bold mb-3"><i class="fa-solid fa-lock text-danger me-2"></i>Scanner Password Required</h4>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enter Security Password</label>
+              <input type="password" id="scannerPasswordInput" class="form-control" placeholder="ATLASCAMSCANNER41">
+            </div>
+            <button class="btn btn-danger w-100 fw-bold" onclick="unlockScanner()">Unlock Camera Scanner</button>
+          </div>
+
+          <div id="activeScannerCard" class="card shadow-sm p-4 text-center" style="display:none;">
+            <h4 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-camera me-2 text-danger"></i>Active Camera Scanner</h4>
+            <div id="reader"></div>
+            <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5"></div>
+            <button class="btn btn-outline-secondary btn-sm mt-4" onclick="lockScanner()">Lock Scanner</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. TEACHER DASHBOARD PORTAL -->
+    <div id="teacherPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card shadow-sm p-4">
+            <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-users text-primary me-2"></i>Live Class Attendance Viewer</h4>
+            
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Grade Level</label>
+                <select id="teacherGrade" class="form-select">
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Section Name</label>
+                <input type="text" id="teacherSectionName" class="form-control" placeholder="e.g. ATLAS">
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100 fw-bold" onclick="loadClassAttendance()">
+                  <i class="fa-solid fa-magnifying-glass me-1"></i> Load Class Data
+                </button>
+              </div>
+            </div>
+
+            <!-- Real-time Counters -->
+            <div class="row text-center mb-4 g-3">
+              <div class="col-md-4">
+                <div class="p-3 bg-light border rounded">
+                  <span class="text-muted fw-bold">Total Students</span>
+                  <h2 id="totalCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-success-subtle border border-success-subtle rounded text-success">
+                  <span class="fw-bold">Present Today</span>
+                  <h2 id="presentCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded text-danger">
+                  <span class="fw-bold">Absent Today</span>
+                  <h2 id="absentCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>LRN</th>
+                    <th>Student Name</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th>Time In</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Enter section name above and click Load Class Data.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. STUDENT REGISTRATION PORTAL -->
+    <div id="studentPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow-sm p-4 mb-4">
+            <h4 class="fw-bold mb-3"><i class="fa-solid fa-user-plus me-2 text-success"></i>Student Registration</h4>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">LRN Number</label>
+              <input type="text" id="regLRN" class="form-control" placeholder="12-digit LRN">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" id="regName" class="form-control" placeholder="Last Name, First Name">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Grade Level</label>
+              <select id="regGrade" class="form-select">
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Section Name</label>
+              <input type="text" id="regSection" class="form-control" placeholder="e.g. ATLAS">
+            </div>
+            <button class="btn btn-success w-100 fw-bold" onclick="registerStudent()">Register & Generate Digital ID</button>
+          </div>
+
+          <div id="qrResultCard" class="card shadow-sm p-4 text-center" style="display: none;">
+            <h5 class="fw-bold text-success mb-3">Registration Complete!</h5>
+            <img id="qrDisplay" src="" alt="Student QR Code" class="img-fluid border p-2 rounded mb-3" style="max-width: 220px;">
+            <p id="qrInfo" class="mb-0 text-dark fw-semibold"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // YOUR ACTUAL FIREBASE CONFIG KEYS FROM ATLAS PROJECT
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
+      authDomain: "atlas-a7657.firebaseapp.com",
+      projectId: "atlas-a7657",
+      storageBucket: "atlas-a7657.firebasestorage.app",
+      messagingSenderId: "464838753019",
+      appId: "1:464838753019:web:bc62531e3bbdf9b4620e5e",
+      measurementId: "G-VSBBFJCGNK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let html5QrcodeScanner = null;
+    let attendanceUnsubscribe = null;
+
+    window.showSection = function(sectionId) {
+      document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+    };
+
+    window.unlockScanner = function() {
+      const pass = document.getElementById('scannerPasswordInput').value;
+      if (pass === 'ATLASCAMSCANNER41') {
+        document.getElementById('scannerAuthCard').style.display = 'none';
+        document.getElementById('activeScannerCard').style.display = 'block';
+        startScanner();
+      } else {
+        alert('Incorrect Password!');
+      }
+    };
+
+    window.lockScanner = function() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }
+      document.getElementById('scannerAuthCard').style.display = 'block';
+      document.getElementById('activeScannerCard').style.display = 'none';
+      document.getElementById('scannerPasswordInput').value = '';
+    };
+
+    function startScanner() {
+      if (html5QrcodeScanner) return;
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      html5QrcodeScanner.render(onScanSuccess, (err) => {});
+    }
+
+    async function onScanSuccess(decodedText) {
+      const statusDiv = document.getElementById('scanStatus');
+      try {
+        const student = JSON.parse(decodedText);
+        if (!student.lrn || !student.name) {
+          statusDiv.className = "mt-3 text-danger";
+          statusDiv.innerText = "Invalid Student QR!";
+          return;
+        }
+
+        statusDiv.className = "mt-3 text-info";
+        statusDiv.innerText = "Logging attendance...";
+
+        const today = new Date().toISOString().split('T')[0];
+        
+        await addDoc(collection(db, "attendance_logs"), {
+          lrn: student.lrn.trim(),
+          name: student.name.trim(),
+          section: student.section.trim().toUpperCase(),
+          date: today,
+          timestamp: serverTimestamp(),
+          timeStr: new Date().toLocaleTimeString()
+        });
+
+        statusDiv.className = "mt-3 text-success";
+        statusDiv.innerText = `[PRESENT] Recorded for ${student.name}`;
+      } catch (e) {
+        statusDiv.className = "mt-3 text-danger";
+        statusDiv.innerText = "Error decoding QR Code!";
+      }
+    }
+
+    window.registerStudent = async function() {
+      const lrn = document.getElementById('regLRN').value.trim();
+      const name = document.getElementById('regName').value.trim();
+      const grade = document.getElementById('regGrade').value;
+      const section = document.getElementById('regSection').value.trim().toUpperCase();
+
+      if (!lrn || !name || !section) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      await setDoc(doc(db, "students", lrn), {
+        lrn: lrn,
+        name: name,
+        grade: grade,
+        section: section
+      });
+
+      const qrPayload = JSON.stringify({ lrn, name, section });
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
+
+      document.getElementById('qrDisplay').src = qrUrl;
+      document.getElementById('qrInfo').innerHTML = `${name}<br><small class="text-muted">LRN: ${lrn} | ${grade} - ${section}</small>`;
+      document.getElementById('qrResultCard').style.display = 'block';
+    };
+
+    window.loadClassAttendance = async function() {
+      const section = document.getElementById('teacherSectionName').value.trim().toUpperCase();
+      if (!section) {
+        alert('Please enter a section name.');
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const tbody = document.getElementById('attendanceTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading live data...</td></tr>';
+
+      const studentsQuery = query(collection(db, "students"), where("section", "==", section));
+      const studentSnap = await getDocs(studentsQuery);
+      
+      const studentsList = [];
+      studentSnap.forEach(doc => studentsList.push(doc.data()));
+
+      if (studentsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No registered students found in this section.</td></tr>';
+        document.getElementById('totalCount').innerText = '0';
+        document.getElementById('presentCount').innerText = '0';
+        document.getElementById('absentCount').innerText = '0';
+        return;
+      }
+
+      if (attendanceUnsubscribe) attendanceUnsubscribe();
+
+      const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", today));
+      
+      attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
+        const loggedLrns = {};
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          loggedLrns[data.lrn] = data.timeStr || 'Present';
+        });
+
+        let presentCounter = 0;
+        let html = '';
+
+        studentsList.forEach(st => {
+          const isPresent = !!loggedLrns[st.lrn];
+          if (isPresent) presentCounter++;
+
+          const badge = isPresent 
+            ? '<span class="badge bg-success">PRESENT</span>' 
+            : '<span class="badge bg-danger">ABSENT</span>';
+
+          html += `<tr>
+            <td>${st.lrn}</td>
+            <td class="fw-semibold">${st.name}</td>
+            <td>${st.section}</td>
+            <td>${badge}</td>
+            <td>${isPresent ? loggedLrns[st.lrn] : '--'}</td>
+          </tr>`;
+        });
+
+        tbody.innerHTML = html;
+        document.getElementById('totalCount').innerText = studentsList.length;
+        document.getElementById('presentCount').innerText = presentCounter;
+        document.getElementById('absentCount').innerText = studentsList.length - presentCounter;
+      });
+    };
+  </script>
+</body>
+</html>
