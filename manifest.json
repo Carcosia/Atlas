@@ -1,6 +1,7 @@
 {
-  "name": "Atlas Parent Tracker",
+  "name": "Atlas Parent Live Tracker",
   "short_name": "Parent Tracker",
+  "description": "Live attendance tracking system for parents.",
   "start_url": "./parent.html",
   "display": "standalone",
   "background_color": "#f4f6f9",
