@@ -5,7 +5,7 @@
   "name": "Atlas Parent Tracker",
   "orientation": "any",
   "scope": "/",
-  "short_name": "Parent Tracking",
-  "start_url": "/parent.html",
+  "short_name": "Parent Tracker",
+  "start_url": "parent.html",
   "theme_color": "#ffffff"
 }
