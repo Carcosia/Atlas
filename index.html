@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- HTML5-QRCode Scanner Library -->
+  <!-- HTML5-QRCode Library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   
   <style>
@@ -17,6 +17,9 @@
     .role-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
     .portal-section { display: none; }
     .portal-section.active { display: block; }
+    .btn-purple { background-color: #5340eb; color: #fff; }
+    .btn-purple:hover { background-color: #402ed6; color: #fff; }
+    .tab-btn { flex: 1; border-radius: 6px; font-weight: 600; padding: 10px; }
     #reader { max-width: 420px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
   </style>
 </head>
@@ -36,7 +39,7 @@
 
   <div class="container">
 
-    <!-- 1. MAIN ROLE SELECTION -->
+    <!-- 1. MAIN ROLE SELECTION (HOME) -->
     <div id="roleSelection" class="portal-section active">
       <div class="text-center my-4">
         <h2 class="fw-bold text-dark">Welcome to School Attendance Portal</h2>
@@ -44,36 +47,297 @@
       </div>
 
       <div class="row g-4 justify-content-center">
-        <!-- Standalone Scanner -->
-        <div class="col-md-3">
-          <div class="card role-card text-center p-4 border-danger shadow-sm" onclick="showSection('scannerPortal')">
-            <i class="fa-solid fa-qrcode text-danger display-4 mb-3"></i>
-            <h5 class="fw-bold text-danger">LIVE SCANNER</h5>
-            <p class="text-muted small">Scan student QR codes using real-time camera.</p>
+        <!-- Live Scanner -->
+        <div class="col-md-2">
+          <div class="card role-card text-center p-3 border-danger shadow-sm h-100" onclick="showSection('scannerPortal')">
+            <i class="fa-solid fa-qrcode text-danger display-5 mb-2"></i>
+            <h6 class="fw-bold text-danger">LIVE SCANNER</h6>
+            <p class="text-muted small mb-0">Camera QR Scanner</p>
           </div>
         </div>
 
-        <!-- Subject Teacher Dashboard -->
-        <div class="col-md-3">
-          <div class="card role-card text-center p-4 border-primary shadow-sm" onclick="showSection('teacherPortal')">
-            <i class="fa-solid fa-chalkboard-user text-primary display-4 mb-3"></i>
-            <h5 class="fw-bold text-primary">TEACHER PORTAL</h5>
-            <p class="text-muted small">View real-time section logs and summary counts.</p>
+        <!-- Subject Teacher -->
+        <div class="col-md-2">
+          <div class="card role-card text-center p-3 border-primary shadow-sm h-100" onclick="showSection('subjectTeacherPortal')">
+            <i class="fa-solid fa-book text-primary display-5 mb-2"></i>
+            <h6 class="fw-bold text-primary">SUBJECT TEACHER</h6>
+            <p class="text-muted small mb-0">View Class Records</p>
           </div>
         </div>
 
-        <!-- Student Registration -->
-        <div class="col-md-3">
-          <div class="card role-card text-center p-4 border-success shadow-sm" onclick="showSection('studentPortal')">
-            <i class="fa-solid fa-id-card text-success display-4 mb-3"></i>
-            <h5 class="fw-bold text-success">STUDENT PORTAL</h5>
-            <p class="text-muted small">Register student LRN and generate digital QR ID.</p>
+        <!-- Adviser Portal -->
+        <div class="col-md-2">
+          <div class="card role-card text-center p-3 border-info shadow-sm h-100" onclick="showSection('adviserPortal')">
+            <i class="fa-solid fa-chalkboard-user text-info display-5 mb-2"></i>
+            <h6 class="fw-bold text-info">ADVISER PORTAL</h6>
+            <p class="text-muted small mb-0">Login & Section Register</p>
+          </div>
+        </div>
+
+        <!-- Student Portal -->
+        <div class="col-md-2">
+          <div class="card role-card text-center p-3 border-success shadow-sm h-100" onclick="prepareStudentPortal()">
+            <i class="fa-solid fa-id-card text-success display-5 mb-2"></i>
+            <h6 class="fw-bold text-success">STUDENT PORTAL</h6>
+            <p class="text-muted small mb-0">Register & Digital ID</p>
+          </div>
+        </div>
+
+        <!-- Admin Setup -->
+        <div class="col-md-2">
+          <div class="card role-card text-center p-3 border-dark shadow-sm h-100" onclick="showSection('adminPortal')">
+            <i class="fa-solid fa-gear text-dark display-5 mb-2"></i>
+            <h6 class="fw-bold text-dark">ADMIN SETUP</h6>
+            <p class="text-muted small mb-0">Database & SY Config</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. STANDALONE SCANNER PORTAL -->
+    <!-- 2. SUBJECT TEACHER ATTENDANCE VIEWER -->
+    <div id="subjectTeacherPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card shadow-sm p-4">
+            <h4 class="fw-bold mb-4 text-dark">
+              <i class="fa-solid fa-user-graduate me-2"></i>Subject Teacher Attendance Viewer
+            </h4>
+            
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">School Year</label>
+                <select id="subjSY" class="form-select">
+                  <option value="2026-2027">2026-2027</option>
+                  <option value="2025-2026">2025-2026</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Grade Level</label>
+                <select id="subjGrade" class="form-select" onchange="updateSubjSections()">
+                  <option value="">Select Grade</option>
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Section</label>
+                <select id="subjSection" class="form-select">
+                  <option value="">-- Select Grade First --</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Date</label>
+                <input type="date" id="subjDate" class="form-control">
+              </div>
+            </div>
+
+            <button class="btn btn-purple w-100 fw-bold mb-4 py-2" onclick="loadSubjectAttendance()">
+              <i class="fa-solid fa-magnifying-glass me-2"></i>View Attendance Records
+            </button>
+
+            <!-- Real-time Summary Cards -->
+            <div class="row text-center mb-4 g-3">
+              <div class="col-md-4">
+                <div class="p-3 bg-light border rounded">
+                  <span class="text-muted fw-bold">Total Class Students</span>
+                  <h2 id="totalSubjCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-success-subtle border border-success-subtle rounded text-success">
+                  <span class="fw-bold">Total Present</span>
+                  <h2 id="presentSubjCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded text-danger">
+                  <span class="fw-bold">Total Absent</span>
+                  <h2 id="absentSubjCount" class="fw-bold mb-0">0</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>LRN</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                  </tr>
+                </thead>
+                <tbody id="subjTableBody">
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Select School Year, Grade, Section, and Date to load class records.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ADVISER PORTAL: LOGIN & REGISTER SECTION -->
+    <div id="adviserPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow-sm p-4">
+            
+            <!-- Navigation Tabs -->
+            <div class="d-flex p-1 bg-light rounded mb-4">
+              <button id="tabLoginBtn" class="btn btn-primary tab-btn" onclick="toggleAdviserTab('login')">Login</button>
+              <button id="tabRegisterBtn" class="btn btn-light tab-btn text-primary" onclick="toggleAdviserTab('register')">Register Section</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="adviserLoginForm">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">School Year</label>
+                <select id="advLoginSY" class="form-select">
+                  <option value="2026-2027">2026-2027</option>
+                  <option value="2025-2026">2025-2026</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Enter Teacher PIN</label>
+                <input type="password" id="advLoginPIN" class="form-control" placeholder="Digits only">
+              </div>
+              <button class="btn btn-purple w-100 fw-bold py-2 mt-2" onclick="loginAdviser()">Login to Dashboard</button>
+            </div>
+
+            <!-- Register Section Form -->
+            <div id="adviserRegisterForm" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">School Year</label>
+                <select id="advRegSY" class="form-select">
+                  <option value="2026-2027">2026-2027</option>
+                  <option value="2025-2026">2025-2026</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Teacher Full Name</label>
+                <input type="text" id="advRegName" class="form-control" placeholder="e.g. John Doe">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Grade Level</label>
+                <select id="advRegGrade" class="form-select">
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Section Name</label>
+                <input type="text" id="advRegSection" class="form-control" placeholder="e.g. ATLAS">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Create PIN</label>
+                <input type="password" id="advRegPIN" class="form-control" placeholder="4-6 numeric digits">
+              </div>
+              <button class="btn btn-purple w-100 fw-bold py-2 mt-2" onclick="registerAdviserSection()">Register Section</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ADMIN DATABASE SETUP -->
+    <div id="adminPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-5">
+          <div class="card shadow-sm p-4">
+            <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-gear me-2"></i>Admin Database Setup</h4>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">School Year</label>
+              <input type="text" id="adminSY" class="form-control" placeholder="e.g. 2026-2027" value="2026-2027">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Start Date</label>
+              <input type="date" id="adminStartDate" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">End Date</label>
+              <input type="date" id="adminEndDate" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Admin Password</label>
+              <input type="password" id="adminPass" class="form-control" placeholder="Enter password">
+            </div>
+
+            <button class="btn btn-purple w-100 fw-bold py-2 mt-2" onclick="saveAdminConfig()">Save Configuration</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. STUDENT REGISTRATION PORTAL -->
+    <div id="studentPortal" class="portal-section">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow-sm p-4 mb-4">
+            <h4 class="fw-bold mb-3"><i class="fa-solid fa-user-plus me-2 text-success"></i>Student Registration</h4>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">LRN Number</label>
+              <input type="text" id="regLRN" class="form-control" placeholder="12-digit LRN">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">First Name</label>
+                <input type="text" id="regFirstName" class="form-control" placeholder="First Name">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Middle Name</label>
+                <input type="text" id="regMiddleName" class="form-control" placeholder="Middle Name">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Last Name</label>
+                <input type="text" id="regLastName" class="form-control" placeholder="Last Name">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Grade Level</label>
+              <select id="regGrade" class="form-select" onchange="updateStudentSections()">
+                <option value="">Select Grade Level</option>
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Select Section (Created by Adviser)</label>
+              <select id="regSectionSelect" class="form-select">
+                <option value="">-- Select Grade First --</option>
+              </select>
+            </div>
+            <button class="btn btn-success w-100 fw-bold" onclick="registerStudent()">Register & Generate Digital ID</button>
+          </div>
+
+          <div id="qrResultCard" class="card shadow-sm p-4 text-center" style="display: none;">
+            <h5 class="fw-bold text-success mb-3">Registration Complete!</h5>
+            <img id="qrDisplay" src="" alt="Student QR Code" class="img-fluid border p-2 rounded mb-3" style="max-width: 220px;">
+            <p id="qrInfo" class="mb-0 text-dark fw-semibold"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. LIVE CAMERA SCANNER PORTAL -->
     <div id="scannerPortal" class="portal-section">
       <div class="row justify-content-center">
         <div class="col-md-6">
@@ -89,125 +353,15 @@
           <div id="activeScannerCard" class="card shadow-sm p-4 text-center" style="display:none;">
             <h4 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-camera me-2 text-danger"></i>Active Camera Scanner</h4>
             <div id="reader"></div>
-            <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5"></div>
-            <button class="btn btn-outline-secondary btn-sm mt-4" onclick="lockScanner()">Lock Scanner</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. TEACHER DASHBOARD PORTAL -->
-    <div id="teacherPortal" class="portal-section">
-      <div class="row justify-content-center">
-        <div class="col-md-10">
-          <div class="card shadow-sm p-4">
-            <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-users text-primary me-2"></i>Live Class Attendance Viewer</h4>
+            <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5">Point camera at student QR code</div>
             
-            <div class="row g-3 mb-4">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Grade Level</label>
-                <select id="teacherGrade" class="form-select">
-                  <option value="Grade 7">Grade 7</option>
-                  <option value="Grade 8">Grade 8</option>
-                  <option value="Grade 9">Grade 9</option>
-                  <option value="Grade 10">Grade 10</option>
-                  <option value="Grade 11">Grade 11</option>
-                  <option value="Grade 12">Grade 12</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Section Name</label>
-                <input type="text" id="teacherSectionName" class="form-control" placeholder="e.g. ATLAS">
-              </div>
-              <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-primary w-100 fw-bold" onclick="loadClassAttendance()">
-                  <i class="fa-solid fa-magnifying-glass me-1"></i> Load Class Data
-                </button>
-              </div>
+            <!-- Success Info Card Appears for 3 Seconds -->
+            <div id="scannedInfoCard" class="card mt-3 p-3 bg-success-subtle border-success text-start" style="display:none;">
+              <h6 class="fw-bold text-success mb-1"><i class="fa-solid fa-circle-check me-1"></i> Attendance Recorded!</h6>
+              <p id="scannedDetails" class="mb-0 small fw-semibold text-dark"></p>
             </div>
 
-            <!-- Real-time Counters -->
-            <div class="row text-center mb-4 g-3">
-              <div class="col-md-4">
-                <div class="p-3 bg-light border rounded">
-                  <span class="text-muted fw-bold">Total Students</span>
-                  <h2 id="totalCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-success-subtle border border-success-subtle rounded text-success">
-                  <span class="fw-bold">Present Today</span>
-                  <h2 id="presentCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded text-danger">
-                  <span class="fw-bold">Absent Today</span>
-                  <h2 id="absentCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-            </div>
-
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead class="table-dark">
-                  <tr>
-                    <th>LRN</th>
-                    <th>Student Name</th>
-                    <th>Section</th>
-                    <th>Status</th>
-                    <th>Time In</th>
-                  </tr>
-                </thead>
-                <tbody id="attendanceTableBody">
-                  <tr>
-                    <td colspan="5" class="text-center text-muted py-4">Enter section name above and click Load Class Data.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. STUDENT REGISTRATION PORTAL -->
-    <div id="studentPortal" class="portal-section">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card shadow-sm p-4 mb-4">
-            <h4 class="fw-bold mb-3"><i class="fa-solid fa-user-plus me-2 text-success"></i>Student Registration</h4>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">LRN Number</label>
-              <input type="text" id="regLRN" class="form-control" placeholder="12-digit LRN">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Full Name</label>
-              <input type="text" id="regName" class="form-control" placeholder="Last Name, First Name">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Grade Level</label>
-              <select id="regGrade" class="form-select">
-                <option value="Grade 7">Grade 7</option>
-                <option value="Grade 8">Grade 8</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-                <option value="Grade 11">Grade 11</option>
-                <option value="Grade 12">Grade 12</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Section Name</label>
-              <input type="text" id="regSection" class="form-control" placeholder="e.g. ATLAS">
-            </div>
-            <button class="btn btn-success w-100 fw-bold" onclick="registerStudent()">Register & Generate Digital ID</button>
-          </div>
-
-          <div id="qrResultCard" class="card shadow-sm p-4 text-center" style="display: none;">
-            <h5 class="fw-bold text-success mb-3">Registration Complete!</h5>
-            <img id="qrDisplay" src="" alt="Student QR Code" class="img-fluid border p-2 rounded mb-3" style="max-width: 220px;">
-            <p id="qrInfo" class="mb-0 text-dark fw-semibold"></p>
+            <button class="btn btn-outline-secondary btn-sm mt-4" onclick="lockScanner()">Lock Scanner</button>
           </div>
         </div>
       </div>
@@ -220,7 +374,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // YOUR ACTUAL FIREBASE CONFIG KEYS FROM ATLAS PROJECT
     const firebaseConfig = {
       apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
       authDomain: "atlas-a7657.firebaseapp.com",
@@ -236,125 +389,109 @@
 
     let html5QrcodeScanner = null;
     let attendanceUnsubscribe = null;
+    let isProcessingScan = false;
+
+    document.getElementById('subjDate').valueAsDate = new Date();
 
     window.showSection = function(sectionId) {
       document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(sectionId).classList.add('active');
     };
 
-    window.unlockScanner = function() {
-      const pass = document.getElementById('scannerPasswordInput').value;
-      if (pass === 'ATLASCAMSCANNER41') {
-        document.getElementById('scannerAuthCard').style.display = 'none';
-        document.getElementById('activeScannerCard').style.display = 'block';
-        startScanner();
+    window.prepareStudentPortal = function() {
+      showSection('studentPortal');
+      document.getElementById('regGrade').value = "";
+      document.getElementById('regSectionSelect').innerHTML = '<option value="">-- Select Grade First --</option>';
+    };
+
+    window.toggleAdviserTab = function(tab) {
+      if (tab === 'login') {
+        document.getElementById('adviserLoginForm').style.display = 'block';
+        document.getElementById('adviserRegisterForm').style.display = 'none';
+        document.getElementById('tabLoginBtn').className = 'btn btn-primary tab-btn';
+        document.getElementById('tabRegisterBtn').className = 'btn btn-light tab-btn text-primary';
       } else {
-        alert('Incorrect Password!');
+        document.getElementById('adviserLoginForm').style.display = 'none';
+        document.getElementById('adviserRegisterForm').style.display = 'block';
+        document.getElementById('tabLoginBtn').className = 'btn btn-light tab-btn text-primary';
+        document.getElementById('tabRegisterBtn').className = 'btn btn-primary tab-btn';
       }
     };
 
-    window.lockScanner = function() {
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear();
-        html5QrcodeScanner = null;
-      }
-      document.getElementById('scannerAuthCard').style.display = 'block';
-      document.getElementById('activeScannerCard').style.display = 'none';
-      document.getElementById('scannerPasswordInput').value = '';
-    };
+    window.updateSubjSections = async function() {
+      const grade = document.getElementById('subjGrade').value;
+      const secSelect = document.getElementById('subjSection');
+      secSelect.innerHTML = '<option value="">Loading...</option>';
 
-    function startScanner() {
-      if (html5QrcodeScanner) return;
-      html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-      html5QrcodeScanner.render(onScanSuccess, (err) => {});
-    }
-
-    async function onScanSuccess(decodedText) {
-      const statusDiv = document.getElementById('scanStatus');
-      try {
-        const student = JSON.parse(decodedText);
-        if (!student.lrn || !student.name) {
-          statusDiv.className = "mt-3 text-danger";
-          statusDiv.innerText = "Invalid Student QR!";
-          return;
-        }
-
-        statusDiv.className = "mt-3 text-info";
-        statusDiv.innerText = "Logging attendance...";
-
-        const today = new Date().toISOString().split('T')[0];
-        
-        await addDoc(collection(db, "attendance_logs"), {
-          lrn: student.lrn.trim(),
-          name: student.name.trim(),
-          section: student.section.trim().toUpperCase(),
-          date: today,
-          timestamp: serverTimestamp(),
-          timeStr: new Date().toLocaleTimeString()
-        });
-
-        statusDiv.className = "mt-3 text-success";
-        statusDiv.innerText = `[PRESENT] Recorded for ${student.name}`;
-      } catch (e) {
-        statusDiv.className = "mt-3 text-danger";
-        statusDiv.innerText = "Error decoding QR Code!";
-      }
-    }
-
-    window.registerStudent = async function() {
-      const lrn = document.getElementById('regLRN').value.trim();
-      const name = document.getElementById('regName').value.trim();
-      const grade = document.getElementById('regGrade').value;
-      const section = document.getElementById('regSection').value.trim().toUpperCase();
-
-      if (!lrn || !name || !section) {
-        alert('Please fill in all fields.');
+      if (!grade) {
+        secSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
         return;
       }
 
-      await setDoc(doc(db, "students", lrn), {
-        lrn: lrn,
-        name: name,
-        grade: grade,
-        section: section
+      const q = query(collection(db, "sections"), where("grade", "==", grade));
+      const snap = await getDocs(q);
+      
+      let options = '<option value="">-- Select Section --</option>';
+      snap.forEach(d => {
+        const data = d.data();
+        options += `<option value="${data.section}">${data.section}</option>`;
       });
 
-      const qrPayload = JSON.stringify({ lrn, name, section });
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
-
-      document.getElementById('qrDisplay').src = qrUrl;
-      document.getElementById('qrInfo').innerHTML = `${name}<br><small class="text-muted">LRN: ${lrn} | ${grade} - ${section}</small>`;
-      document.getElementById('qrResultCard').style.display = 'block';
+      secSelect.innerHTML = options;
     };
 
-    window.loadClassAttendance = async function() {
-      const section = document.getElementById('teacherSectionName').value.trim().toUpperCase();
-      if (!section) {
-        alert('Please enter a section name.');
+    window.updateStudentSections = async function() {
+      const grade = document.getElementById('regGrade').value;
+      const secSelect = document.getElementById('regSectionSelect');
+      secSelect.innerHTML = '<option value="">Loading sections...</option>';
+
+      if (!grade) {
+        secSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
         return;
       }
 
-      const today = new Date().toISOString().split('T')[0];
-      const tbody = document.getElementById('attendanceTableBody');
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading live data...</td></tr>';
+      const q = query(collection(db, "sections"), where("grade", "==", grade));
+      const snap = await getDocs(q);
 
-      const studentsQuery = query(collection(db, "students"), where("section", "==", section));
-      const studentSnap = await getDocs(studentsQuery);
+      let options = '<option value="">-- Select Adviser Created Section --</option>';
+      snap.forEach(d => {
+        const data = d.data();
+        options += `<option value="${data.section}">${data.section} (Adviser: ${data.teacherName})</option>`;
+      });
+
+      secSelect.innerHTML = options;
+    };
+
+    window.loadSubjectAttendance = async function() {
+      const grade = document.getElementById('subjGrade').value;
+      const section = document.getElementById('subjSection').value;
+      const date = document.getElementById('subjDate').value;
+      const tbody = document.getElementById('subjTableBody');
+
+      if (!grade || !section || !date) {
+        alert('Please select Grade, Section, and Date.');
+        return;
+      }
+
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
+
+      const stQuery = query(collection(db, "students"), where("section", "==", section));
+      const stSnap = await getDocs(stQuery);
       
       const studentsList = [];
-      studentSnap.forEach(doc => studentsList.push(doc.data()));
+      stSnap.forEach(doc => studentsList.push(doc.data()));
 
       if (studentsList.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No registered students found in this section.</td></tr>';
-        document.getElementById('totalCount').innerText = '0';
-        document.getElementById('presentCount').innerText = '0';
-        document.getElementById('absentCount').innerText = '0';
+        document.getElementById('totalSubjCount').innerText = '0';
+        document.getElementById('presentSubjCount').innerText = '0';
+        document.getElementById('absentSubjCount').innerText = '0';
         return;
       }
 
       if (attendanceUnsubscribe) attendanceUnsubscribe();
 
-      const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", today));
+      const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", date));
       
       attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
         const loggedLrns = {};
@@ -377,18 +514,201 @@
           html += `<tr>
             <td>${st.lrn}</td>
             <td class="fw-semibold">${st.name}</td>
-            <td>${st.section}</td>
             <td>${badge}</td>
             <td>${isPresent ? loggedLrns[st.lrn] : '--'}</td>
+            <td>--</td>
           </tr>`;
         });
 
         tbody.innerHTML = html;
-        document.getElementById('totalCount').innerText = studentsList.length;
-        document.getElementById('presentCount').innerText = presentCounter;
-        document.getElementById('absentCount').innerText = studentsList.length - presentCounter;
+        document.getElementById('totalSubjCount').innerText = studentsList.length;
+        document.getElementById('presentSubjCount').innerText = presentCounter;
+        document.getElementById('absentSubjCount').innerText = studentsList.length - presentCounter;
       });
     };
+
+    window.registerAdviserSection = async function() {
+      const sy = document.getElementById('advRegSY').value;
+      const name = document.getElementById('advRegName').value.trim();
+      const grade = document.getElementById('advRegGrade').value;
+      const section = document.getElementById('advRegSection').value.trim().toUpperCase();
+      const pin = document.getElementById('advRegPIN').value.trim();
+
+      if (!name || !section || !pin) {
+        alert('Please complete all fields.');
+        return;
+      }
+
+      await setDoc(doc(db, "sections", section), {
+        sy: sy,
+        teacherName: name,
+        grade: grade,
+        section: section,
+        pin: pin
+      });
+
+      alert(`Section ${section} registered successfully!`);
+      document.getElementById('advRegName').value = '';
+      document.getElementById('advRegSection').value = '';
+      document.getElementById('advRegPIN').value = '';
+    };
+
+    window.loginAdviser = async function() {
+      const pin = document.getElementById('advLoginPIN').value.trim();
+      if (!pin) {
+        alert('Please enter your PIN.');
+        return;
+      }
+
+      const q = query(collection(db, "sections"), where("pin", "==", pin));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        alert('Invalid Teacher PIN!');
+      } else {
+        const secData = snap.docs[0].data();
+        alert(`Welcome, ${secData.teacherName}! (Section: ${secData.section})`);
+        showSection('subjectTeacherPortal');
+        document.getElementById('subjGrade').value = secData.grade;
+        await window.updateSubjSections();
+        document.getElementById('subjSection').value = secData.section;
+      }
+    };
+
+    window.saveAdminConfig = async function() {
+      const sy = document.getElementById('adminSY').value.trim();
+      const start = document.getElementById('adminStartDate').value;
+      const end = document.getElementById('adminEndDate').value;
+      const pass = document.getElementById('adminPass').value.trim();
+
+      if (!sy || !pass) {
+        alert('Please fill in required fields.');
+        return;
+      }
+
+      await setDoc(doc(db, "admin_config", "settings"), {
+        schoolYear: sy,
+        startDate: start,
+        endDate: end,
+        adminPassword: pass
+      });
+
+      alert('Admin Configuration Saved Successfully!');
+    };
+
+    window.registerStudent = async function() {
+      const lrn = document.getElementById('regLRN').value.trim();
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const middleName = document.getElementById('regMiddleName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const grade = document.getElementById('regGrade').value;
+      const section = document.getElementById('regSectionSelect').value;
+
+      if (!lrn || !firstName || !lastName || !grade || !section) {
+        alert('Please fill in LRN, First Name, Last Name, Grade, and select a Section.');
+        return;
+      }
+
+      const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
+      const fullName = `${lastName}, ${firstName}${middleInitial}`;
+
+      await setDoc(doc(db, "students", lrn), {
+        lrn: lrn,
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+        name: fullName,
+        grade: grade,
+        section: section
+      });
+
+      const qrPayload = JSON.stringify({ lrn, name: fullName, section });
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
+
+      document.getElementById('qrDisplay').src = qrUrl;
+      document.getElementById('qrInfo').innerHTML = `${fullName}<br><small class="text-muted">LRN: ${lrn} | ${grade} - ${section}</small>`;
+      document.getElementById('qrResultCard').style.display = 'block';
+    };
+
+    window.unlockScanner = function() {
+      const pass = document.getElementById('scannerPasswordInput').value;
+      if (pass === 'ATLASCAMSCANNER41') {
+        document.getElementById('scannerAuthCard').style.display = 'none';
+        document.getElementById('activeScannerCard').style.display = 'block';
+        startScanner();
+      } else {
+        alert('Incorrect Password!');
+      }
+    };
+
+    window.lockScanner = function() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => console.error(error));
+        html5QrcodeScanner = null;
+      }
+      document.getElementById('scannerAuthCard').style.display = 'block';
+      document.getElementById('activeScannerCard').style.display = 'none';
+      document.getElementById('scannerPasswordInput').value = '';
+    };
+
+    function startScanner() {
+      if (html5QrcodeScanner) return;
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+      html5QrcodeScanner.render(onScanSuccess, (err) => {});
+    }
+
+    async function onScanSuccess(decodedText) {
+      if (isProcessingScan) return; // Prevent duplicate rapid triggers
+
+      const statusDiv = document.getElementById('scanStatus');
+      const infoCard = document.getElementById('scannedInfoCard');
+      const detailsText = document.getElementById('scannedDetails');
+
+      try {
+        const student = JSON.parse(decodedText);
+        if (!student.lrn || !student.name) {
+          statusDiv.className = "mt-3 text-danger";
+          statusDiv.innerText = "Invalid Student QR!";
+          return;
+        }
+
+        isProcessingScan = true;
+        statusDiv.className = "mt-3 text-info";
+        statusDiv.innerText = "Logging attendance...";
+
+        const today = new Date().toISOString().split('T')[0];
+        const timeNow = new Date().toLocaleTimeString();
+        
+        await addDoc(collection(db, "attendance_logs"), {
+          lrn: student.lrn.trim(),
+          name: student.name.trim(),
+          section: student.section.trim().toUpperCase(),
+          date: today,
+          timestamp: serverTimestamp(),
+          timeStr: timeNow
+        });
+
+        // Show success status & 3-second student info preview card
+        statusDiv.className = "mt-3 text-success";
+        statusDiv.innerText = `SUCCESS: Present Recorded!`;
+
+        detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
+        infoCard.style.display = 'block';
+
+        // Wait for 3 seconds, then reset scanner status for the next student
+        setTimeout(() => {
+          infoCard.style.display = 'none';
+          statusDiv.className = "mt-3 font-monospace fw-bold fs-5 text-dark";
+          statusDiv.innerText = "Point camera at student QR code";
+          isProcessingScan = false;
+        }, 3000);
+
+      } catch (e) {
+        statusDiv.className = "mt-3 text-danger";
+        statusDiv.innerText = "Error decoding QR Code!";
+        isProcessingScan = false;
+      }
+    }
   </script>
 </body>
 </html>
