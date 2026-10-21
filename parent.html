@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent LRN Live Tracker - Atlas</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-dark px-4 py-3 mb-4 shadow-sm">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1 fw-bold">
+        <i class="fa-solid fa-mobile-screen-button text-warning me-2"></i>Parent LRN Live Tracker
+      </span>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm p-4 border-warning">
+          <h4 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-bell text-warning me-2"></i>Campus Arrival Tracker</h4>
+          <p class="text-muted small mb-4">Type your child's 12-digit LRN below to check if they have safely arrived on campus today.</p>
+          
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Child LRN Number</label>
+            <input type="text" id="parentLRNInput" class="form-control" placeholder="Enter LRN (e.g., 124770140247)">
+          </div>
+          
+          <button class="btn btn-warning w-100 fw-bold py-2 text-dark shadow-sm" onclick="checkParentChildStatus()">
+            <i class="fa-solid fa-magnifying-glass me-1"></i> Check Arrival Status
+          </button>
+
+          <!-- Result Pop-up Box -->
+          <div id="parentResultCard" class="card mt-4 p-3 border shadow-sm" style="display:none;">
+            <h5 id="parentResultTitle" class="fw-bold mb-2"></h5>
+            <div id="parentResultDetails" class="small text-muted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
+      authDomain: "atlas-a7657.firebaseapp.com",
+      projectId: "atlas-a7657",
+      storageBucket: "atlas-a7657.firebasestorage.app",
+      messagingSenderId: "464838753019",
+      appId: "1:464838753019:web:bc62531e3bbdf9b4620e5e",
+      measurementId: "G-VSBBFJCGNK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.checkParentChildStatus = async function() {
+      const lrn = document.getElementById('parentLRNInput').value.trim();
+      const resultCard = document.getElementById('parentResultCard');
+      const resultTitle = document.getElementById('parentResultTitle');
+      const resultDetails = document.getElementById('parentResultDetails');
+
+      if (!lrn) {
+        alert('Please enter your child’s LRN.');
+        return;
+      }
+
+      resultCard.style.display = 'block';
+      resultCard.className = "card mt-4 p-3 border shadow-sm bg-light";
+      resultTitle.className = "fw-bold mb-2 text-secondary";
+      resultTitle.innerText = "Checking database...";
+      resultDetails.innerText = "Please wait while we verify your child's attendance...";
+
+      const studentDoc = await getDoc(doc(db, "students", lrn));
+      if (!studentDoc.exists()) {
+        resultCard.className = "card mt-4 p-3 border border-danger shadow-sm bg-danger-subtle";
+        resultTitle.className = "fw-bold mb-2 text-danger";
+        resultTitle.innerText = "LRN Not Found";
+        resultDetails.innerText = `No student registered with LRN: ${lrn}. Please check the number or contact your adviser.`;
+        return;
+      }
+
+      const studentData = studentDoc.data();
+      const today = new Date().toISOString().split('T')[0];
+
+      const q = query(collection(db, "attendance_logs"), where("lrn", "==", lrn), where("date", "==", today));
+      const logSnap = await getDocs(q);
+
+      if (!logSnap.empty) {
+        let logData = logSnap.docs[0].data();
+        resultCard.className = "card mt-4 p-3 border border-success shadow-sm bg-success-subtle";
+        resultTitle.className = "fw-bold mb-2 text-success";
+        resultTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> SAFE ON CAMPUS`;
+        resultDetails.innerHTML = `<strong>Student Name:</strong> ${studentData.name}<br><strong>Section:</strong> ${studentData.section}<br><strong>Status:</strong> <span class="text-success fw-bold">PRESENT</span><br><strong>Time Arrived:</strong> ${logData.timeStr}`;
+      } else {
+        resultCard.className = "card mt-4 p-3 border border-warning shadow-sm bg-warning-subtle";
+        resultTitle.className = "fw-bold mb-2 text-dark";
+        resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> NOT YET SCANNED TODAY`;
+        resultDetails.innerHTML = `<strong>Student Name:</strong> ${studentData.name}<br><strong>Section:</strong> ${studentData.section}<br><strong>Status:</strong> <span class="text-danger fw-bold">ABSENT / NOT YET ARRIVED</span><br><em class="text-muted">Your child has not scanned their QR code at the entrance scanner yet today.</em>`;
+      }
+    };
+  </script>
+</body>
+</html>
