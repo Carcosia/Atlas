@@ -181,6 +181,7 @@
                   <tr>
                     <th>LRN</th>
                     <th>Student Name</th>
+                    <th>Gender</th>
                     <th>Status</th>
                     <th>Time In</th>
                     <th>Time Out</th>
@@ -188,7 +189,7 @@
                 </thead>
                 <tbody id="subjTableBody">
                   <tr>
-                    <td colspan="5" class="text-center text-muted py-4">Select filters above and click Load Class Records.</td>
+                    <td colspan="6" class="text-center text-muted py-4">Select filters above and click Load Class Records.</td>
                   </tr>
                 </tbody>
               </table>
@@ -323,17 +324,27 @@
                 <input type="text" id="regLastName" class="form-control" placeholder="Last Name">
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Grade Level</label>
-              <select id="regGrade" class="form-select" onchange="updateStudentSections()">
-                <option value="">Select Grade Level</option>
-                <option value="Grade 7">Grade 7</option>
-                <option value="Grade 8">Grade 8</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-                <option value="Grade 11">Grade 11</option>
-                <option value="Grade 12">Grade 12</option>
-              </select>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Gender</label>
+                <select id="regGender" class="form-select">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Grade Level</label>
+                <select id="regGrade" class="form-select" onchange="updateStudentSections()">
+                  <option value="">Select Grade Level</option>
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Select Section (Created by Adviser)</label>
@@ -372,7 +383,7 @@
             <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5">Point camera at student QR code</div>
             
             <div id="scannedInfoCard" class="card mt-3 p-3 bg-success-subtle border-success text-start" style="display:none;">
-              <h6 class="fw-bold text-success mb-1"><i class="fa-solid fa-circle-check me-1"></i> Attendance Recorded!</h6>
+              <h6 id="scannedHeaderTitle" class="fw-bold text-success mb-1"></h6>
               <p id="scannedDetails" class="mb-0 small fw-semibold text-dark"></p>
             </div>
 
@@ -387,7 +398,7 @@
   <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, setDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
@@ -508,7 +519,7 @@
         return;
       }
 
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
 
       const stQuery = query(collection(db, "students"), where("section", "==", section));
       const stSnap = await getDocs(stQuery);
@@ -517,7 +528,7 @@
       stSnap.forEach(doc => studentsList.push(doc.data()));
 
       if (studentsList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No registered students found in this section.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No registered students found in this section.</td></tr>';
         document.getElementById('totalSubjCount').innerText = '0';
         document.getElementById('presentSubjCount').innerText = '0';
         document.getElementById('absentSubjCount').innerText = '0';
@@ -527,7 +538,7 @@
       document.getElementById('totalSubjCount').innerText = studentsList.length;
 
       if (mode === 'daily') {
-        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Status</th><th>Time In</th><th>Time Out</th></tr>`;
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Gender</th><th>Status</th><th>Time In</th><th>Time Out</th></tr>`;
         const date = document.getElementById('subjDate').value;
         if (!date) {
           alert('Please select a date.');
@@ -538,17 +549,18 @@
         const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", date));
         
         attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
-          const loggedLrns = {};
+          const loggedDataMap = {};
           snapshot.forEach(doc => {
             const data = doc.data();
-            loggedLrns[data.lrn] = data.timeStr || 'Present';
+            loggedDataMap[data.lrn] = data;
           });
 
           let presentCounter = 0;
           let html = '';
 
           studentsList.forEach(st => {
-            const isPresent = !!loggedLrns[st.lrn];
+            const log = loggedDataMap[st.lrn];
+            const isPresent = !!log;
             if (isPresent) presentCounter++;
 
             const badge = isPresent 
@@ -558,9 +570,10 @@
             html += `<tr>
               <td>${st.lrn}</td>
               <td class="fw-semibold">${st.name}</td>
+              <td>${st.gender || 'N/A'}</td>
               <td>${badge}</td>
-              <td>${isPresent ? loggedLrns[st.lrn] : '--'}</td>
-              <td>--</td>
+              <td>${isPresent ? (log.timeStr || '--') : '--'}</td>
+              <td>${isPresent ? (log.timeOutStr || '--') : '--'}</td>
             </tr>`;
           });
 
@@ -570,7 +583,7 @@
         });
 
       } else {
-        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Days Present</th><th>Days Absent</th><th>Attendance Rate</th></tr>`;
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Gender</th><th>Days Present</th><th>Days Absent</th><th>Attendance Rate</th></tr>`;
         const monthYear = document.getElementById('subjMonthYear').value;
         if (!monthYear) {
           alert('Please select a month and year.');
@@ -607,6 +620,7 @@
           html += `<tr>
             <td>${st.lrn}</td>
             <td class="fw-semibold">${st.name}</td>
+            <td>${st.gender || 'N/A'}</td>
             <td><span class="text-success fw-bold">${presentCount} days</span></td>
             <td><span class="text-danger fw-bold">${absentCount} days</span></td>
             <td>${rateBadge}</td>
@@ -619,7 +633,6 @@
       }
     };
 
-    // Download QR Codes as PDF (Waits for images to load before printing)
     window.downloadSectionQRs = async function() {
       const grade = document.getElementById('subjGrade').value;
       const section = document.getElementById('subjSection').value;
@@ -652,7 +665,8 @@
 
         html += `<div style="border: 2px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; width: 220px; background: #fff; page-break-inside: avoid; margin-bottom: 15px;">
                    <h5 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold;">${st.name}</h5>
-                   <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">LRN: ${st.lrn}<br>${grade} - ${st.section}</p>
+                   <p style="margin: 0 0 5px 0; font-size: 12px; color: #666;">LRN: ${st.lrn}<br>Gender: ${st.gender || 'N/A'}</p>
+                   <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">${grade} - ${st.section}</p>
                    <img src="${qrUrl}" alt="QR" style="width: 140px; height: 140px;"/>
                  </div>`;
       });
@@ -661,7 +675,6 @@
       container.innerHTML = html;
       container.style.display = 'block';
 
-      // Wait for all images to fully download before opening print dialog
       const images = container.querySelectorAll('img');
       let loadedCount = 0;
 
@@ -674,21 +687,11 @@
       images.forEach(img => {
         if (img.complete) {
           loadedCount++;
-          if (loadedCount === images.length) {
-            triggerPrint(container);
-          }
+          if (loadedCount === images.length) triggerPrint(container);
         } else {
-          img.onload = () => {
+          img.onload = img.onerror = () => {
             loadedCount++;
-            if (loadedCount === images.length) {
-              triggerPrint(container);
-            }
-          };
-          img.onerror = () => {
-            loadedCount++;
-            if (loadedCount === images.length) {
-              triggerPrint(container);
-            }
+            if (loadedCount === images.length) triggerPrint(container);
           };
         }
       });
@@ -696,9 +699,7 @@
 
     function triggerPrint(container) {
       window.print();
-      setTimeout(() => {
-        container.style.display = 'none';
-      }, 1000);
+      setTimeout(() => { container.style.display = 'none'; }, 1000);
     }
 
     window.registerAdviserSection = async function() {
@@ -775,11 +776,12 @@
       const firstName = document.getElementById('regFirstName').value.trim();
       const middleName = document.getElementById('regMiddleName').value.trim();
       const lastName = document.getElementById('regLastName').value.trim();
+      const gender = document.getElementById('regGender').value;
       const grade = document.getElementById('regGrade').value;
       const section = document.getElementById('regSectionSelect').value;
 
-      if (!lrn || !firstName || !lastName || !grade || !section) {
-        alert('Please fill in LRN, First Name, Last Name, Grade, and select a Section.');
+      if (!lrn || !firstName || !lastName || !gender || !grade || !section) {
+        alert('Please fill in LRN, First Name, Last Name, Gender, Grade, and select a Section.');
         return;
       }
 
@@ -792,6 +794,7 @@
         middleName: middleName,
         lastName: lastName,
         name: fullName,
+        gender: gender,
         grade: grade,
         section: section
       });
@@ -800,7 +803,7 @@
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
 
       document.getElementById('qrDisplay').src = qrUrl;
-      document.getElementById('qrInfo').innerHTML = `${fullName}<br><small class="text-muted">LRN: ${lrn} | ${grade} - ${section}</small>`;
+      document.getElementById('qrInfo').innerHTML = `${fullName}<br><small class="text-muted">LRN: ${lrn} | Gender: ${gender} | ${grade} - ${section}</small>`;
       document.getElementById('qrResultCard').style.display = 'block';
     };
 
@@ -831,11 +834,13 @@
       html5QrcodeScanner.render(onScanSuccess, (err) => {});
     }
 
+    // Smart Scanner Logic: 1st Scan = Time In | 2nd Scan = Time Out
     async function onScanSuccess(decodedText) {
       if (isProcessingScan) return;
 
       const statusDiv = document.getElementById('scanStatus');
       const infoCard = document.getElementById('scannedInfoCard');
+      const headerTitle = document.getElementById('scannedHeaderTitle');
       const detailsText = document.getElementById('scannedDetails');
 
       try {
@@ -848,24 +853,50 @@
 
         isProcessingScan = true;
         statusDiv.className = "mt-3 text-info";
-        statusDiv.innerText = "Logging attendance...";
+        statusDiv.innerText = "Checking student status...";
 
         const today = new Date().toISOString().split('T')[0];
         const timeNow = new Date().toLocaleTimeString();
-        
-        await addDoc(collection(db, "attendance_logs"), {
-          lrn: student.lrn.trim(),
-          name: student.name.trim(),
-          section: student.section.trim().toUpperCase(),
-          date: today,
-          timestamp: serverTimestamp(),
-          timeStr: timeNow
-        });
 
-        statusDiv.className = "mt-3 text-success";
-        statusDiv.innerText = `SUCCESS: Present Recorded!`;
+        // Check if student has already scanned today
+        const q = query(collection(db, "attendance_logs"), where("lrn", "==", student.lrn.trim()), where("date", "==", today));
+        const snap = await getDocs(q);
 
-        detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
+        if (snap.empty) {
+          // --- 1ST SCAN: RECORD TIME IN ---
+          await addDoc(collection(db, "attendance_logs"), {
+            lrn: student.lrn.trim(),
+            name: student.name.trim(),
+            section: student.section.trim().toUpperCase(),
+            date: today,
+            timestamp: serverTimestamp(),
+            timeStr: timeNow,
+            timeOutStr: null
+          });
+
+          statusDiv.className = "mt-3 text-success";
+          statusDiv.innerText = `SUCCESS: TIME IN Recorded!`;
+
+          headerTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> TIME IN Recorded!`;
+          headerTitle.className = "fw-bold text-success mb-1";
+          detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
+          infoCard.className = "card mt-3 p-3 bg-success-subtle border-success text-start";
+        } else {
+          // --- 2ND SCAN: RECORD TIME OUT ---
+          const logDoc = snap.docs[0];
+          await updateDoc(doc(db, "attendance_logs", logDoc.id), {
+            timeOutStr: timeNow
+          });
+
+          statusDiv.className = "mt-3 text-primary";
+          statusDiv.innerText = `SUCCESS: TIME OUT Recorded!`;
+
+          headerTitle.innerHTML = `<i class="fa-solid fa-right-from-bracket me-1"></i> TIME OUT Recorded!`;
+          headerTitle.className = "fw-bold text-primary mb-1";
+          detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time Out:</strong> ${timeNow}`;
+          infoCard.className = "card mt-3 p-3 bg-info-subtle border-info text-start";
+        }
+
         infoCard.style.display = 'block';
 
         setTimeout(() => {
