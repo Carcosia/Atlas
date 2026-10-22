@@ -21,6 +21,12 @@
     .btn-purple:hover { background-color: #402ed6; color: #fff; }
     .tab-btn { flex: 1; border-radius: 6px; font-weight: 600; padding: 10px; }
     #reader { max-width: 420px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printQRContainer, #printQRContainer * { visibility: visible; }
+      #printQRContainer { position: absolute; left: 0; top: 0; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -94,21 +100,24 @@
       </div>
     </div>
 
-    <!-- 2. SUBJECT TEACHER ATTENDANCE VIEWER -->
+    <!-- 2. SUBJECT TEACHER & ADVISER ATTENDANCE VIEWER -->
     <div id="subjectTeacherPortal" class="portal-section">
       <div class="row justify-content-center">
         <div class="col-md-10">
           <div class="card shadow-sm p-4">
-            <h4 class="fw-bold mb-4 text-dark">
-              <i class="fa-solid fa-user-graduate me-2"></i>Subject Teacher Attendance Viewer
+            <h4 class="fw-bold mb-4 text-dark d-flex justify-content-between align-items-center">
+              <span><i class="fa-solid fa-user-graduate me-2"></i>Class Attendance & QR Codes</span>
+              <button class="btn btn-success btn-sm fw-bold" onclick="downloadSectionQRs()">
+                <i class="fa-solid fa-file-pdf me-1"></i> Download QrCodes
+              </button>
             </h4>
             
             <div class="row g-3 mb-3">
               <div class="col-md-3">
-                <label class="form-label fw-semibold">School Year</label>
-                <select id="subjSY" class="form-select">
-                  <option value="2026-2027">2026-2027</option>
-                  <option value="2025-2026">2025-2026</option>
+                <label class="form-label fw-semibold">View Mode</label>
+                <select id="viewMode" class="form-select" onchange="toggleViewMode()">
+                  <option value="daily">Daily Attendance</option>
+                  <option value="monthly">Monthly Summary</option>
                 </select>
               </div>
               <div class="col-md-3">
@@ -129,14 +138,19 @@
                   <option value="">-- Select Grade First --</option>
                 </select>
               </div>
-              <div class="col-md-3">
+              
+              <div class="col-md-3" id="dailyDateContainer">
                 <label class="form-label fw-semibold">Date</label>
                 <input type="date" id="subjDate" class="form-control">
               </div>
+              <div class="col-md-3" id="monthlyContainer" style="display:none;">
+                <label class="form-label fw-semibold">Month & Year</label>
+                <input type="month" id="subjMonthYear" class="form-control">
+              </div>
             </div>
 
-            <button class="btn btn-purple w-100 fw-bold mb-4 py-2" onclick="loadSubjectAttendance()">
-              <i class="fa-solid fa-magnifying-glass me-2"></i>View Attendance Records
+            <button class="btn btn-purple w-100 fw-bold mb-4 py-2" onclick="loadAttendanceRecords()">
+              <i class="fa-solid fa-magnifying-glass me-2"></i>Load Class Records
             </button>
 
             <!-- Real-time Summary Cards -->
@@ -149,13 +163,13 @@
               </div>
               <div class="col-md-4">
                 <div class="p-3 bg-success-subtle border border-success-subtle rounded text-success">
-                  <span class="fw-bold">Total Present</span>
+                  <span class="fw-bold" id="presentLabelTitle">Total Present</span>
                   <h2 id="presentSubjCount" class="fw-bold mb-0">0</h2>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="p-3 bg-danger-subtle border border-danger-subtle rounded text-danger">
-                  <span class="fw-bold">Total Absent</span>
+                  <span class="fw-bold" id="absentLabelTitle">Total Absent</span>
                   <h2 id="absentSubjCount" class="fw-bold mb-0">0</h2>
                 </div>
               </div>
@@ -163,7 +177,7 @@
 
             <div class="table-responsive">
               <table class="table table-hover align-middle">
-                <thead class="table-light">
+                <thead class="table-light" id="tableHeaderRow">
                   <tr>
                     <th>LRN</th>
                     <th>Student Name</th>
@@ -174,7 +188,7 @@
                 </thead>
                 <tbody id="subjTableBody">
                   <tr>
-                    <td colspan="5" class="text-center text-muted py-4">Select School Year, Grade, Section, and Date to load class records.</td>
+                    <td colspan="5" class="text-center text-muted py-4">Select filters above and click Load Class Records.</td>
                   </tr>
                 </tbody>
               </table>
@@ -185,13 +199,15 @@
       </div>
     </div>
 
+    <!-- Hidden Printable QR Container for PDF Download -->
+    <div id="printQRContainer" style="display:none;"></div>
+
     <!-- 3. ADVISER PORTAL: LOGIN & REGISTER SECTION -->
     <div id="adviserPortal" class="portal-section">
       <div class="row justify-content-center">
         <div class="col-md-6">
           <div class="card shadow-sm p-4">
             
-            <!-- Navigation Tabs -->
             <div class="d-flex p-1 bg-light rounded mb-4">
               <button id="tabLoginBtn" class="btn btn-primary tab-btn" onclick="toggleAdviserTab('login')">Login</button>
               <button id="tabRegisterBtn" class="btn btn-light tab-btn text-primary" onclick="toggleAdviserTab('register')">Register Section</button>
@@ -355,7 +371,6 @@
             <div id="reader"></div>
             <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5">Point camera at student QR code</div>
             
-            <!-- Success Info Card Appears for 3 Seconds -->
             <div id="scannedInfoCard" class="card mt-3 p-3 bg-success-subtle border-success text-start" style="display:none;">
               <h6 class="fw-bold text-success mb-1"><i class="fa-solid fa-circle-check me-1"></i> Attendance Recorded!</h6>
               <p id="scannedDetails" class="mb-0 small fw-semibold text-dark"></p>
@@ -392,6 +407,10 @@
     let isProcessingScan = false;
 
     document.getElementById('subjDate').valueAsDate = new Date();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    document.getElementById('subjMonthYear').value = `${year}-${month}`;
 
     window.showSection = function(sectionId) {
       document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
@@ -402,6 +421,21 @@
       showSection('studentPortal');
       document.getElementById('regGrade').value = "";
       document.getElementById('regSectionSelect').innerHTML = '<option value="">-- Select Grade First --</option>';
+    };
+
+    window.toggleViewMode = function() {
+      const mode = document.getElementById('viewMode').value;
+      if (mode === 'daily') {
+        document.getElementById('dailyDateContainer').style.display = 'block';
+        document.getElementById('monthlyContainer').style.display = 'none';
+        document.getElementById('presentLabelTitle').innerText = 'Total Present';
+        document.getElementById('absentLabelTitle').innerText = 'Total Absent';
+      } else {
+        document.getElementById('dailyDateContainer').style.display = 'none';
+        document.getElementById('monthlyContainer').style.display = 'block';
+        document.getElementById('presentLabelTitle').innerText = 'Class Total Present Days';
+        document.getElementById('absentLabelTitle').innerText = 'Class Total Absent Days';
+      }
     };
 
     window.toggleAdviserTab = function(tab) {
@@ -462,14 +496,15 @@
       secSelect.innerHTML = options;
     };
 
-    window.loadSubjectAttendance = async function() {
+    window.loadAttendanceRecords = async function() {
+      const mode = document.getElementById('viewMode').value;
       const grade = document.getElementById('subjGrade').value;
       const section = document.getElementById('subjSection').value;
-      const date = document.getElementById('subjDate').value;
       const tbody = document.getElementById('subjTableBody');
+      const headerRow = document.getElementById('tableHeaderRow');
 
-      if (!grade || !section || !date) {
-        alert('Please select Grade, Section, and Date.');
+      if (!grade || !section) {
+        alert('Please select Grade and Section.');
         return;
       }
 
@@ -489,43 +524,182 @@
         return;
       }
 
-      if (attendanceUnsubscribe) attendanceUnsubscribe();
+      document.getElementById('totalSubjCount').innerText = studentsList.length;
 
-      const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", date));
-      
-      attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
-        const loggedLrns = {};
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          loggedLrns[data.lrn] = data.timeStr || 'Present';
+      if (mode === 'daily') {
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Status</th><th>Time In</th><th>Time Out</th></tr>`;
+        const date = document.getElementById('subjDate').value;
+        if (!date) {
+          alert('Please select a date.');
+          return;
+        }
+
+        if (attendanceUnsubscribe) attendanceUnsubscribe();
+        const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", date));
+        
+        attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
+          const loggedLrns = {};
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            loggedLrns[data.lrn] = data.timeStr || 'Present';
+          });
+
+          let presentCounter = 0;
+          let html = '';
+
+          studentsList.forEach(st => {
+            const isPresent = !!loggedLrns[st.lrn];
+            if (isPresent) presentCounter++;
+
+            const badge = isPresent 
+              ? '<span class="badge bg-success">PRESENT</span>' 
+              : '<span class="badge bg-danger">ABSENT</span>';
+
+            html += `<tr>
+              <td>${st.lrn}</td>
+              <td class="fw-semibold">${st.name}</td>
+              <td>${badge}</td>
+              <td>${isPresent ? loggedLrns[st.lrn] : '--'}</td>
+              <td>--</td>
+            </tr>`;
+          });
+
+          tbody.innerHTML = html;
+          document.getElementById('presentSubjCount').innerText = presentCounter;
+          document.getElementById('absentSubjCount').innerText = studentsList.length - presentCounter;
         });
 
-        let presentCounter = 0;
+      } else {
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Days Present</th><th>Days Absent</th><th>Attendance Rate</th></tr>`;
+        const monthYear = document.getElementById('subjMonthYear').value;
+        if (!monthYear) {
+          alert('Please select a month and year.');
+          return;
+        }
+
+        const logsSnap = await getDocs(query(collection(db, "attendance_logs"), where("section", "==", section)));
+        const distinctDaysSet = new Set();
+        const studentPresentDays = {};
+
+        logsSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.date && data.date.startsWith(monthYear)) {
+            distinctDaysSet.add(data.date);
+            if (!studentPresentDays[data.lrn]) studentPresentDays[data.lrn] = new Set();
+            studentPresentDays[data.lrn].add(data.date);
+          }
+        });
+
+        const totalSchoolDays = distinctDaysSet.size;
+        let totalPresentAccumulator = 0;
+        let totalAbsentAccumulator = 0;
         let html = '';
 
         studentsList.forEach(st => {
-          const isPresent = !!loggedLrns[st.lrn];
-          if (isPresent) presentCounter++;
+          const presentCount = studentPresentDays[st.lrn] ? studentPresentDays[st.lrn].size : 0;
+          const absentCount = Math.max(0, totalSchoolDays - presentCount);
+          totalPresentAccumulator += presentCount;
+          totalAbsentAccumulator += absentCount;
 
-          const badge = isPresent 
-            ? '<span class="badge bg-success">PRESENT</span>' 
-            : '<span class="badge bg-danger">ABSENT</span>';
+          const rate = totalSchoolDays > 0 ? Math.round((presentCount / totalSchoolDays) * 100) : 0;
+          const rateBadge = rate >= 75 ? `<span class="badge bg-success">${rate}%</span>` : `<span class="badge bg-danger">${rate}%</span>`;
 
           html += `<tr>
             <td>${st.lrn}</td>
             <td class="fw-semibold">${st.name}</td>
-            <td>${badge}</td>
-            <td>${isPresent ? loggedLrns[st.lrn] : '--'}</td>
-            <td>--</td>
+            <td><span class="text-success fw-bold">${presentCount} days</span></td>
+            <td><span class="text-danger fw-bold">${absentCount} days</span></td>
+            <td>${rateBadge}</td>
           </tr>`;
         });
 
         tbody.innerHTML = html;
-        document.getElementById('totalSubjCount').innerText = studentsList.length;
-        document.getElementById('presentSubjCount').innerText = presentCounter;
-        document.getElementById('absentSubjCount').innerText = studentsList.length - presentCounter;
+        document.getElementById('presentSubjCount').innerText = totalPresentAccumulator;
+        document.getElementById('absentSubjCount').innerText = totalAbsentAccumulator;
+      }
+    };
+
+    // Download QR Codes as PDF (Waits for images to load before printing)
+    window.downloadSectionQRs = async function() {
+      const grade = document.getElementById('subjGrade').value;
+      const section = document.getElementById('subjSection').value;
+
+      if (!grade || !section) {
+        alert('Please select a Grade and Section first, then click Load Class Records.');
+        return;
+      }
+
+      const stQuery = query(collection(db, "students"), where("section", "==", section));
+      const stSnap = await getDocs(stQuery);
+      
+      const studentsList = [];
+      stSnap.forEach(doc => studentsList.push(doc.data()));
+
+      if (studentsList.length === 0) {
+        alert('No students found in this section.');
+        return;
+      }
+
+      const container = document.getElementById('printQRContainer');
+      let html = `<div style="padding: 20px; font-family: Arial, sans-serif;">
+                    <h2 style="text-align: center; margin-bottom: 5px;">Section ${section} - Student QR Code IDs</h2>
+                    <p style="text-align: center; margin-bottom: 20px; color: #555;">Grade Level: ${grade}</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">`;
+
+      studentsList.forEach(st => {
+        const qrPayload = JSON.stringify({ lrn: st.lrn, name: st.name, section: st.section });
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrPayload)}`;
+
+        html += `<div style="border: 2px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; width: 220px; background: #fff; page-break-inside: avoid; margin-bottom: 15px;">
+                   <h5 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold;">${st.name}</h5>
+                   <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">LRN: ${st.lrn}<br>${grade} - ${st.section}</p>
+                   <img src="${qrUrl}" alt="QR" style="width: 140px; height: 140px;"/>
+                 </div>`;
+      });
+
+      html += `</div></div>`;
+      container.innerHTML = html;
+      container.style.display = 'block';
+
+      // Wait for all images to fully download before opening print dialog
+      const images = container.querySelectorAll('img');
+      let loadedCount = 0;
+
+      if (images.length === 0) {
+        window.print();
+        container.style.display = 'none';
+        return;
+      }
+
+      images.forEach(img => {
+        if (img.complete) {
+          loadedCount++;
+          if (loadedCount === images.length) {
+            triggerPrint(container);
+          }
+        } else {
+          img.onload = () => {
+            loadedCount++;
+            if (loadedCount === images.length) {
+              triggerPrint(container);
+            }
+          };
+          img.onerror = () => {
+            loadedCount++;
+            if (loadedCount === images.length) {
+              triggerPrint(container);
+            }
+          };
+        }
       });
     };
+
+    function triggerPrint(container) {
+      window.print();
+      setTimeout(() => {
+        container.style.display = 'none';
+      }, 1000);
+    }
 
     window.registerAdviserSection = async function() {
       const sy = document.getElementById('advRegSY').value;
@@ -658,7 +832,7 @@
     }
 
     async function onScanSuccess(decodedText) {
-      if (isProcessingScan) return; // Prevent duplicate rapid triggers
+      if (isProcessingScan) return;
 
       const statusDiv = document.getElementById('scanStatus');
       const infoCard = document.getElementById('scannedInfoCard');
@@ -688,14 +862,12 @@
           timeStr: timeNow
         });
 
-        // Show success status & 3-second student info preview card
         statusDiv.className = "mt-3 text-success";
         statusDiv.innerText = `SUCCESS: Present Recorded!`;
 
         detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
         infoCard.style.display = 'block';
 
-        // Wait for 3 seconds, then reset scanner status for the next student
         setTimeout(() => {
           infoCard.style.display = 'none';
           statusDiv.className = "mt-3 font-monospace fw-bold fs-5 text-dark";
