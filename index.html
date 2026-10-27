@@ -714,7 +714,7 @@
 
             <div class="mb-3">
               <label class="form-label fw-semibold">Enter Security Password</label>
-              <input type="password" id="scannerPasswordInput" class="form-control" placeholder="Enter Password">
+              <input type="password" id="scannerPasswordInput" class="form-control" placeholder="ATLASCAMSCANNER41">
             </div>
             <button class="btn btn-danger w-100 fw-bold py-2" onclick="unlockScanner()">Unlock & Start Camera</button>
           </div>
@@ -1805,6 +1805,7 @@
         const today = new Date().toISOString().split('T')[0];
         const timeNow = new Date().toLocaleTimeString();
 
+        // Query specifically for the active session (Morning or Afternoon)
         const q = query(
           collection(db, "attendance_logs"), 
           where("sy", "==", studentSY),
