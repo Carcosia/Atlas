@@ -4,23 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart School Attendance Portal</title>
-  <!-- Bootstrap 5 -->
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- FontAwesome -->
+  <!-- FontAwesome Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <!-- HTML5-QRCode Library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   
   <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .role-card { cursor: pointer; transition: all 0.2s ease-in-out; border-radius: 12px; }
-    .role-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    html, body {
+      height: 100%;
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .role-card {
+      cursor: pointer;
+      transition: all 0.25s ease-in-out;
+      border-radius: 16px;
+      border: none;
+      background: #ffffff;
+    }
+    .role-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+    }
     .portal-section { display: none; }
     .portal-section.active { display: block; }
-    .btn-purple { background-color: #5340eb; color: #fff; }
-    .btn-purple:hover { background-color: #402ed6; color: #fff; }
-    .tab-btn { flex: 1; border-radius: 6px; font-weight: 600; padding: 10px; }
-    #reader { max-width: 420px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+    .btn-purple { background-color: #635bff; color: #fff; }
+    .btn-purple:hover { background-color: #5147e5; color: #fff; }
+    .tab-btn { flex: 1; border-radius: 8px; font-weight: 600; padding: 10px; }
+    
+    #reader { max-width: 480px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 2px solid #dee2e6; }
+    /* Mirror the camera video feed */
+    #reader video {
+      transform: scaleX(-1);
+    }
+    
+    .main-container {
+      max-width: 100% !important;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
 
     @media print {
       body * { visibility: hidden; }
@@ -29,174 +53,183 @@
     }
   </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-dark bg-dark px-4 py-3 mb-4 shadow-sm">
+  <nav class="navbar navbar-dark bg-dark px-4 py-3 shadow-sm">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-      <span class="navbar-brand mb-0 h1 fw-bold">
-        <i class="fa-solid fa-graduation-cap me-2 text-primary"></i>Attendance System
+      <span class="navbar-brand mb-0 h1 fs-4 fw-bold">
+        <i class="fa-solid fa-graduation-cap me-2 text-primary"></i>Atlas Smart Attendance System
       </span>
-      <button class="btn btn-outline-light btn-sm" onclick="showSection('roleSelection')">
+      <button class="btn btn-outline-light btn-sm px-3 fw-semibold" onclick="showSection('roleSelection')">
         <i class="fa-solid fa-house me-1"></i> Home
       </button>
     </div>
   </nav>
 
-  <div class="container">
+  <!-- Main Content Maximized Area -->
+  <div class="container-fluid main-container my-4 flex-grow-1">
 
     <!-- 1. MAIN ROLE SELECTION (HOME) -->
     <div id="roleSelection" class="portal-section active">
-      <div class="text-center my-4">
-        <h2 class="fw-bold text-dark">Welcome to School Attendance Portal</h2>
-        <p class="text-muted">Select your portal to continue</p>
+      <div class="text-center my-5">
+        <h1 class="fw-bold text-dark display-5">School Administration & Tracking Portal</h1>
+        <p class="text-muted fs-5">Select a module below to launch the workspace</p>
       </div>
 
-      <div class="row g-4 justify-content-center">
+      <div class="row g-4 justify-content-center px-lg-5">
         <!-- Live Scanner -->
-        <div class="col-md-2">
-          <div class="card role-card text-center p-3 border-danger shadow-sm h-100" onclick="showSection('scannerPortal')">
-            <i class="fa-solid fa-qrcode text-danger display-5 mb-2"></i>
-            <h6 class="fw-bold text-danger">LIVE SCANNER</h6>
-            <p class="text-muted small mb-0">Camera QR Scanner</p>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-danger border-4" onclick="showSection('scannerPortal')">
+            <i class="fa-solid fa-qrcode text-danger display-4 mb-3"></i>
+            <h5 class="fw-bold text-danger">LIVE SCANNER</h5>
+            <p class="text-muted small mb-0">Camera QR Attendance</p>
           </div>
         </div>
 
         <!-- Subject Teacher -->
-        <div class="col-md-2">
-          <div class="card role-card text-center p-3 border-primary shadow-sm h-100" onclick="showSection('subjectTeacherPortal')">
-            <i class="fa-solid fa-book text-primary display-5 mb-2"></i>
-            <h6 class="fw-bold text-primary">SUBJECT TEACHER</h6>
-            <p class="text-muted small mb-0">View Class Records</p>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-primary border-4" onclick="prepareSubjectTeacherPortal()">
+            <i class="fa-solid fa-book text-primary display-4 mb-3"></i>
+            <h5 class="fw-bold text-primary">TEACHER PORTAL</h5>
+            <p class="text-muted small mb-0">Class Records & Summaries</p>
           </div>
         </div>
 
         <!-- Adviser Portal -->
-        <div class="col-md-2">
-          <div class="card role-card text-center p-3 border-info shadow-sm h-100" onclick="showSection('adviserPortal')">
-            <i class="fa-solid fa-chalkboard-user text-info display-5 mb-2"></i>
-            <h6 class="fw-bold text-info">ADVISER PORTAL</h6>
-            <p class="text-muted small mb-0">Login & Section Register</p>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-info border-4" onclick="prepareAdviserPortal()">
+            <i class="fa-solid fa-chalkboard-user text-info display-4 mb-3"></i>
+            <h5 class="fw-bold text-info">ADVISER LOGIN</h5>
+            <p class="text-muted small mb-0">Register & Manage Sections</p>
           </div>
         </div>
 
         <!-- Student Portal -->
-        <div class="col-md-2">
-          <div class="card role-card text-center p-3 border-success shadow-sm h-100" onclick="prepareStudentPortal()">
-            <i class="fa-solid fa-id-card text-success display-5 mb-2"></i>
-            <h6 class="fw-bold text-success">STUDENT PORTAL</h6>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-success border-4" onclick="prepareStudentPortal()">
+            <i class="fa-solid fa-id-card text-success display-4 mb-3"></i>
+            <h5 class="fw-bold text-success">STUDENT REG</h5>
             <p class="text-muted small mb-0">Register & Digital ID</p>
           </div>
         </div>
 
         <!-- Admin Setup -->
-        <div class="col-md-2">
-          <div class="card role-card text-center p-3 border-dark shadow-sm h-100" onclick="showSection('adminPortal')">
-            <i class="fa-solid fa-gear text-dark display-5 mb-2"></i>
-            <h6 class="fw-bold text-dark">ADMIN SETUP</h6>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-dark border-4" onclick="prepareAdminPortal()">
+            <i class="fa-solid fa-gear text-dark display-4 mb-3"></i>
+            <h5 class="fw-bold text-dark">ADMIN SETUP</h5>
             <p class="text-muted small mb-0">Database & SY Config</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. SUBJECT TEACHER & ADVISER ATTENDANCE VIEWER -->
+    <!-- 2. SUBJECT TEACHER & ATTENDANCE VIEWER -->
     <div id="subjectTeacherPortal" class="portal-section">
-      <div class="row justify-content-center">
-        <div class="col-md-10">
-          <div class="card shadow-sm p-4">
-            <h4 class="fw-bold mb-4 text-dark d-flex justify-content-between align-items-center">
-              <span><i class="fa-solid fa-user-graduate me-2"></i>Class Attendance & QR Codes</span>
-              <button class="btn btn-success btn-sm fw-bold" onclick="downloadSectionQRs()">
-                <i class="fa-solid fa-file-pdf me-1"></i> Download QrCodes
-              </button>
-            </h4>
-            
-            <div class="row g-3 mb-3">
-              <div class="col-md-3">
-                <label class="form-label fw-semibold">View Mode</label>
-                <select id="viewMode" class="form-select" onchange="toggleViewMode()">
-                  <option value="daily">Daily Attendance</option>
-                  <option value="monthly">Monthly Summary</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label fw-semibold">Grade Level</label>
-                <select id="subjGrade" class="form-select" onchange="updateSubjSections()">
-                  <option value="">Select Grade</option>
-                  <option value="Grade 7">Grade 7</option>
-                  <option value="Grade 8">Grade 8</option>
-                  <option value="Grade 9">Grade 9</option>
-                  <option value="Grade 10">Grade 10</option>
-                  <option value="Grade 11">Grade 11</option>
-                  <option value="Grade 12">Grade 12</option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label fw-semibold">Section</label>
-                <select id="subjSection" class="form-select">
-                  <option value="">-- Select Grade First --</option>
-                </select>
-              </div>
-              
-              <div class="col-md-3" id="dailyDateContainer">
-                <label class="form-label fw-semibold">Date</label>
-                <input type="date" id="subjDate" class="form-control">
-              </div>
-              <div class="col-md-3" id="monthlyContainer" style="display:none;">
-                <label class="form-label fw-semibold">Month & Year</label>
-                <input type="month" id="subjMonthYear" class="form-control">
-              </div>
-            </div>
+      <div class="card shadow-sm border-0 p-4 mx-auto w-100">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <h3 class="fw-bold text-dark mb-0"><i class="fa-solid fa-user-graduate me-2 text-primary"></i>Class Attendance Records</h3>
+        </div>
+        
+        <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">School Year</label>
+            <select id="subjSY" class="form-select" onchange="updateSubjSections()">
+              <option value="">Select SY</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">View Mode</label>
+            <select id="viewMode" class="form-select" onchange="toggleViewMode()">
+              <option value="daily">Daily Attendance</option>
+              <option value="monthly">Monthly Summary</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">Session</label>
+            <select id="subjSession" class="form-select">
+              <option value="Morning">Morning Session</option>
+              <option value="Afternoon">Afternoon Session</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">Grade Level</label>
+            <select id="subjGrade" class="form-select" onchange="updateSubjSections()">
+              <option value="">Select Grade</option>
+              <option value="Grade 7">Grade 7</option>
+              <option value="Grade 8">Grade 8</option>
+              <option value="Grade 9">Grade 9</option>
+              <option value="Grade 10">Grade 10</option>
+              <option value="Grade 11">Grade 11</option>
+              <option value="Grade 12">Grade 12</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <label class="form-label fw-semibold">Section</label>
+            <select id="subjSection" class="form-select">
+              <option value="">-- Select Grade & SY First --</option>
+            </select>
+          </div>
+          
+          <div class="col-lg-2 col-md-4" id="dailyDateContainer">
+            <label class="form-label fw-semibold">Date</label>
+            <input type="date" id="subjDate" class="form-control" onchange="autoSelectSubjSYByDate()">
+          </div>
+          <div class="col-lg-2 col-md-4" id="monthlyContainer" style="display:none;">
+            <label class="form-label fw-semibold">Month & Year</label>
+            <input type="month" id="subjMonthYear" class="form-control">
+          </div>
 
-            <button class="btn btn-purple w-100 fw-bold mb-4 py-2" onclick="loadAttendanceRecords()">
-              <i class="fa-solid fa-magnifying-glass me-2"></i>Load Class Records
+          <div class="col-lg-12 col-md-12 d-flex justify-content-end">
+            <button class="btn btn-purple px-4 fw-bold py-2" onclick="loadAttendanceRecords()">
+              <i class="fa-solid fa-magnifying-glass me-2"></i>Load Records
             </button>
-
-            <!-- Real-time Summary Cards -->
-            <div class="row text-center mb-4 g-3">
-              <div class="col-md-4">
-                <div class="p-3 bg-light border rounded">
-                  <span class="text-muted fw-bold">Total Class Students</span>
-                  <h2 id="totalSubjCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-success-subtle border border-success-subtle rounded text-success">
-                  <span class="fw-bold" id="presentLabelTitle">Total Present</span>
-                  <h2 id="presentSubjCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded text-danger">
-                  <span class="fw-bold" id="absentLabelTitle">Total Absent</span>
-                  <h2 id="absentSubjCount" class="fw-bold mb-0">0</h2>
-                </div>
-              </div>
-            </div>
-
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead class="table-light" id="tableHeaderRow">
-                  <tr>
-                    <th>LRN</th>
-                    <th>Student Name</th>
-                    <th>Gender</th>
-                    <th>Status</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                  </tr>
-                </thead>
-                <tbody id="subjTableBody">
-                  <tr>
-                    <td colspan="6" class="text-center text-muted py-4">Select filters above and click Load Class Records.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
           </div>
         </div>
+
+        <!-- Real-time Summary Cards -->
+        <div class="row text-center mb-4 g-3">
+          <div class="col-md-4">
+            <div class="p-3 bg-white border rounded-3 shadow-sm">
+              <span class="text-muted fw-semibold">Total Class Students</span>
+              <h2 id="totalSubjCount" class="fw-bold mb-0 text-dark">0</h2>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 shadow-sm text-success">
+              <span class="fw-semibold" id="presentLabelTitle">Total Present</span>
+              <h2 id="presentSubjCount" class="fw-bold mb-0">0</h2>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3 shadow-sm text-danger">
+              <span class="fw-semibold" id="absentLabelTitle">Total Absent</span>
+              <h2 id="absentSubjCount" class="fw-bold mb-0">0</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive bg-white rounded-3 border shadow-sm">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark" id="tableHeaderRow">
+              <tr>
+                <th>LRN</th>
+                <th>Student Name</th>
+                <th>Gender</th>
+                <th>Status</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+              </tr>
+            </thead>
+            <tbody id="subjTableBody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-5">Select filters above and click Load Records.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
 
@@ -206,10 +239,11 @@
     <!-- 3. ADVISER PORTAL: LOGIN & REGISTER SECTION -->
     <div id="adviserPortal" class="portal-section">
       <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card shadow-sm p-4">
-            
-            <div class="d-flex p-1 bg-light rounded mb-4">
+        <div class="col-lg-10 col-md-12">
+          
+          <!-- Adviser Authentication Card -->
+          <div id="adviserAuthCard" class="card shadow-sm border-0 p-4 mx-auto" style="max-width: 600px;">
+            <div class="d-flex p-1 bg-light rounded-3 mb-4">
               <button id="tabLoginBtn" class="btn btn-primary tab-btn" onclick="toggleAdviserTab('login')">Login</button>
               <button id="tabRegisterBtn" class="btn btn-light tab-btn text-primary" onclick="toggleAdviserTab('register')">Register Section</button>
             </div>
@@ -219,8 +253,7 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold">School Year</label>
                 <select id="advLoginSY" class="form-select">
-                  <option value="2026-2027">2026-2027</option>
-                  <option value="2025-2026">2025-2026</option>
+                  <option value="">Loading SY...</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -235,8 +268,7 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold">School Year</label>
                 <select id="advRegSY" class="form-select">
-                  <option value="2026-2027">2026-2027</option>
-                  <option value="2025-2026">2025-2026</option>
+                  <option value="">Loading SY...</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -264,7 +296,189 @@
               </div>
               <button class="btn btn-purple w-100 fw-bold py-2 mt-2" onclick="registerAdviserSection()">Register Section</button>
             </div>
+          </div>
 
+          <!-- Adviser Logged-In Dashboard -->
+          <div id="adviserDashboardCard" class="card shadow-sm border-0 p-4" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 border-bottom pb-3">
+              <div>
+                <h4 class="fw-bold text-dark mb-1" id="advWelcomeTitle">Adviser Dashboard</h4>
+                <p class="text-muted mb-0 fw-semibold" id="advSectionSubtitle">Section: --</p>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-success fw-bold btn-sm px-3" onclick="downloadAdviserSectionQRs()">
+                  <i class="fa-solid fa-file-pdf me-1"></i> Download QR Codes
+                </button>
+                <button class="btn btn-outline-danger fw-semibold btn-sm px-3" onclick="logoutAdviser()">
+                  <i class="fa-solid fa-right-from-bracket me-1"></i> Log Out
+                </button>
+              </div>
+            </div>
+
+            <!-- Adviser Tabs Switcher -->
+            <ul class="nav nav-pills mb-4">
+              <li class="nav-item">
+                <button class="nav-link active fw-semibold" id="tabAdvAttendance" onclick="switchAdvTab('attendance')">Attendance Records</button>
+              </li>
+              <li class="nav-item ms-2">
+                <button class="nav-link fw-semibold" id="tabAdvManageStudents" onclick="switchAdvTab('students')">Manage & Edit Students</button>
+              </li>
+            </ul>
+
+            <!-- TAB 1: ATTENDANCE VIEWER -->
+            <div id="advAttendanceView">
+              <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+                <div class="col-md-3">
+                  <label class="form-label fw-semibold">View Mode</label>
+                  <select id="advViewMode" class="form-select" onchange="toggleAdvViewMode()">
+                    <option value="daily">Daily Attendance</option>
+                    <option value="monthly">Monthly Summary</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-semibold">Session</label>
+                  <select id="advSession" class="form-select">
+                    <option value="Morning">Morning Session</option>
+                    <option value="Afternoon">Afternoon Session</option>
+                  </select>
+                </div>
+                <div class="col-md-3" id="advDailyDateContainer">
+                  <label class="form-label fw-semibold">Date</label>
+                  <input type="date" id="advDate" class="form-control">
+                </div>
+                <div class="col-md-3" id="advMonthlyContainer" style="display:none;">
+                  <label class="form-label fw-semibold">Month & Year</label>
+                  <input type="month" id="advMonthYear" class="form-control">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                  <button class="btn btn-purple w-100 fw-bold py-2" onclick="loadAdviserAttendance()">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Load Attendance
+                  </button>
+                </div>
+              </div>
+
+              <!-- Summary Cards -->
+              <div class="row text-center mb-4 g-3">
+                <div class="col-md-4">
+                  <div class="p-3 bg-white border rounded-3 shadow-sm">
+                    <span class="text-muted fw-semibold">Total Students</span>
+                    <h2 id="advTotalCount" class="fw-bold mb-0 text-dark">0</h2>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 shadow-sm text-success">
+                    <span class="fw-semibold" id="advPresentLabel">Total Present</span>
+                    <h2 id="advPresentCount" class="fw-bold mb-0">0</h2>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3 shadow-sm text-danger">
+                    <span class="fw-semibold" id="advAbsentLabel">Total Absent</span>
+                    <h2 id="advAbsentCount" class="fw-bold mb-0">0</h2>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive bg-white rounded-3 border shadow-sm">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-dark" id="advTableHeaderRow">
+                    <tr>
+                      <th>LRN</th>
+                      <th>Student Name</th>
+                      <th>Gender</th>
+                      <th>Status</th>
+                      <th>Time In</th>
+                      <th>Time Out</th>
+                    </tr>
+                  </thead>
+                  <tbody id="advTableBody">
+                    <tr>
+                      <td colspan="6" class="text-center text-muted py-5">Click Load Attendance above to view records.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB 2: MANAGE & EDIT STUDENTS -->
+            <div id="advManageStudentsView" style="display:none;">
+              <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-users-gear me-2 text-primary"></i>Section Student Roster & Information</h5>
+              <div class="table-responsive bg-white rounded-3 border shadow-sm">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>LRN</th>
+                      <th>Student Name</th>
+                      <th>Gender</th>
+                      <th>Grade & Section</th>
+                      <th class="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="advStudentsTableBody">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">Loading students...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content p-3">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-user-pen me-2 text-primary"></i>Edit Student Information</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="editModalOriginalLRN">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">LRN Number</label>
+              <input type="text" id="editModalLRN" class="form-control">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">First Name</label>
+                <input type="text" id="editModalFirstName" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Middle Name</label>
+                <input type="text" id="editModalMiddleName" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Last Name</label>
+                <input type="text" id="editModalLastName" class="form-control">
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Suffix</label>
+                <input type="text" id="editModalSuffix" class="form-control" placeholder="e.g. Jr., III">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Gender</label>
+                <select id="editModalGender" class="form-select">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-danger btn-sm px-3 fw-semibold" onclick="deleteStudentFromModal()">
+              <i class="fa-solid fa-trash me-1"></i> Delete Student
+            </button>
+            <div>
+              <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-purple btn-sm px-4 fw-bold ms-1" onclick="saveEditedStudent()">Save Changes</button>
+            </div>
           </div>
         </div>
       </div>
@@ -273,28 +487,124 @@
     <!-- 4. ADMIN DATABASE SETUP -->
     <div id="adminPortal" class="portal-section">
       <div class="row justify-content-center">
-        <div class="col-md-5">
-          <div class="card shadow-sm p-4">
-            <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-gear me-2"></i>Admin Database Setup</h4>
-            
+        <div class="col-lg-8 col-md-10">
+          
+          <!-- Admin Password Unlock Card -->
+          <div id="adminAuthCard" class="card shadow-sm border-0 p-4 mx-auto" style="max-width: 500px;">
+            <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-lock me-2 text-danger"></i>Admin Authentication</h4>
             <div class="mb-3">
-              <label class="form-label fw-semibold">School Year</label>
-              <input type="text" id="adminSY" class="form-control" placeholder="e.g. 2026-2027" value="2026-2027">
+              <label class="form-label fw-semibold">Enter Admin Password</label>
+              <input type="password" id="adminLoginPass" class="form-control" placeholder="Enter admin password">
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Start Date</label>
-              <input type="date" id="adminStartDate" class="form-control">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">End Date</label>
-              <input type="date" id="adminEndDate" class="form-control">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Admin Password</label>
-              <input type="password" id="adminPass" class="form-control" placeholder="Enter password">
+            <button class="btn btn-danger w-100 fw-bold py-2 mt-2" onclick="unlockAdminSetup()">Unlock Setup</button>
+          </div>
+
+          <!-- Admin Dashboard / School Year & Section Manager Card -->
+          <div id="adminDashboardCard" class="card shadow-sm border-0 p-4" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-gear me-2"></i>Admin Database & Section Manager</h4>
+              <button class="btn btn-outline-secondary btn-sm" onclick="lockAdminSetup()">Lock Admin</button>
             </div>
 
-            <button class="btn btn-purple w-100 fw-bold py-2 mt-2" onclick="saveAdminConfig()">Save Configuration</button>
+            <div class="row g-4">
+              <!-- School Year Manager -->
+              <div class="col-md-5">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                  <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-calendar-plus me-2"></i>Create School Year</h5>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">School Year Name</label>
+                    <input type="text" id="adminSY" class="form-control" placeholder="e.g. 2026-2027">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Start Date</label>
+                    <input type="date" id="adminStartDate" class="form-control">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">End Date</label>
+                    <input type="date" id="adminEndDate" class="form-control">
+                  </div>
+                  <button class="btn btn-purple w-100 fw-bold py-2" onclick="saveAdminSchoolYear()">Register SY</button>
+
+                  <hr class="my-4">
+                  <h6 class="fw-bold text-dark mb-2">Registered School Years:</h6>
+                  <ul id="adminSYList" class="list-group">
+                    <li class="list-group-item text-muted small">Loading...</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Sections & Teachers Manager -->
+              <div class="col-md-7">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                  <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chalkboard-user me-2 text-info"></i>Manage Sections & Teacher PINs</h5>
+                  <div class="table-responsive bg-white rounded border shadow-sm" style="max-height: 420px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0 small">
+                      <thead class="table-dark">
+                        <tr>
+                          <th>SY & Section</th>
+                          <th>Teacher</th>
+                          <th>PIN</th>
+                          <th class="text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="adminSectionsTableBody">
+                        <tr>
+                          <td colspan="4" class="text-center text-muted py-3">Loading sections...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Edit Section Modal -->
+    <div class="modal fade" id="adminEditSectionModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content p-3">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Edit Section & Teacher Info</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="adminEditSectionId">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">School Year</label>
+              <input type="text" id="adminEditSY" class="form-control" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Grade Level</label>
+              <select id="adminEditGrade" class="form-select">
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Section Name</label>
+              <input type="text" id="adminEditSectionName" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Teacher Full Name</label>
+              <input type="text" id="adminEditTeacherName" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Teacher PIN</label>
+              <input type="text" id="adminEditPIN" class="form-control">
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-purple btn-sm px-4 fw-bold ms-1" onclick="saveAdminEditedSection()">Save Changes</button>
           </div>
         </div>
       </div>
@@ -303,25 +613,35 @@
     <!-- 5. STUDENT REGISTRATION PORTAL -->
     <div id="studentPortal" class="portal-section">
       <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card shadow-sm p-4 mb-4">
-            <h4 class="fw-bold mb-3"><i class="fa-solid fa-user-plus me-2 text-success"></i>Student Registration</h4>
+        <div class="col-lg-6 col-md-8">
+          <div class="card shadow-sm border-0 p-4 mb-4">
+            <h4 class="fw-bold mb-3 text-success"><i class="fa-solid fa-user-plus me-2"></i>Student Registration</h4>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">School Year</label>
+              <select id="regSYSelect" class="form-select" onchange="updateStudentSections()">
+                <option value="">Loading SY...</option>
+              </select>
+            </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">LRN Number</label>
               <input type="text" id="regLRN" class="form-control" placeholder="12-digit LRN">
             </div>
             <div class="row g-2 mb-3">
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <label class="form-label fw-semibold">First Name</label>
                 <input type="text" id="regFirstName" class="form-control" placeholder="First Name">
               </div>
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <label class="form-label fw-semibold">Middle Name</label>
                 <input type="text" id="regMiddleName" class="form-control" placeholder="Middle Name">
               </div>
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <label class="form-label fw-semibold">Last Name</label>
                 <input type="text" id="regLastName" class="form-control" placeholder="Last Name">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Suffix</label>
+                <input type="text" id="regSuffix" class="form-control" placeholder="e.g. Jr., III">
               </div>
             </div>
             <div class="row g-2 mb-3">
@@ -349,15 +669,15 @@
             <div class="mb-3">
               <label class="form-label fw-semibold">Select Section (Created by Adviser)</label>
               <select id="regSectionSelect" class="form-select">
-                <option value="">-- Select Grade First --</option>
+                <option value="">-- Select Grade & SY First --</option>
               </select>
             </div>
-            <button class="btn btn-success w-100 fw-bold" onclick="registerStudent()">Register & Generate Digital ID</button>
+            <button class="btn btn-success w-100 fw-bold py-2" onclick="registerStudent()">Register & Generate Digital ID</button>
           </div>
 
-          <div id="qrResultCard" class="card shadow-sm p-4 text-center" style="display: none;">
+          <div id="qrResultCard" class="card shadow-sm border-0 p-4 text-center bg-white" style="display: none;">
             <h5 class="fw-bold text-success mb-3">Registration Complete!</h5>
-            <img id="qrDisplay" src="" alt="Student QR Code" class="img-fluid border p-2 rounded mb-3" style="max-width: 220px;">
+            <img id="qrDisplay" src="" alt="Student QR Code" class="img-fluid border p-2 rounded mb-3 shadow-sm" style="max-width: 220px;">
             <p id="qrInfo" class="mb-0 text-dark fw-semibold"></p>
           </div>
         </div>
@@ -367,27 +687,57 @@
     <!-- 6. LIVE CAMERA SCANNER PORTAL -->
     <div id="scannerPortal" class="portal-section">
       <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div id="scannerAuthCard" class="card shadow-sm p-4">
-            <h4 class="fw-bold mb-3"><i class="fa-solid fa-lock text-danger me-2"></i>Scanner Password Required</h4>
+        <div class="col-lg-6 col-md-8">
+          <div id="scannerAuthCard" class="card shadow-sm border-0 p-4">
+            <h4 class="fw-bold mb-3 text-danger"><i class="fa-solid fa-lock me-2"></i>Scanner Options & Security</h4>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">School Year (Auto-detected by Date)</label>
+              <input type="text" id="scannerAutoSY" class="form-control bg-light fw-bold text-primary" readonly value="Detecting SY...">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Select Session</label>
+              <select id="scannerSessionSelect" class="form-select">
+                <option value="Morning">Morning Session</option>
+                <option value="Afternoon">Afternoon Session</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Select Scan Mode</label>
+              <select id="scannerModeSelect" class="form-select">
+                <option value="TimeIn">Time-In Mode</option>
+                <option value="TimeOut">Time-Out Mode</option>
+              </select>
+            </div>
+
             <div class="mb-3">
               <label class="form-label fw-semibold">Enter Security Password</label>
               <input type="password" id="scannerPasswordInput" class="form-control" placeholder="ATLASCAMSCANNER41">
             </div>
-            <button class="btn btn-danger w-100 fw-bold" onclick="unlockScanner()">Unlock Camera Scanner</button>
+            <button class="btn btn-danger w-100 fw-bold py-2" onclick="unlockScanner()">Unlock & Start Camera</button>
           </div>
 
-          <div id="activeScannerCard" class="card shadow-sm p-4 text-center" style="display:none;">
-            <h4 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-camera me-2 text-danger"></i>Active Camera Scanner</h4>
+          <div id="activeScannerCard" class="card shadow-sm border-0 p-4 text-center" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-camera me-2 text-danger"></i>Active Camera Scanner</h5>
+              <div>
+                <span id="activeSYBadge" class="badge bg-secondary fs-6 me-1">SY: --</span>
+                <span id="activeSessionBadge" class="badge bg-primary fs-6 me-1">Morning</span>
+                <span id="activeModeBadge" class="badge bg-success fs-6">Time-In</span>
+              </div>
+            </div>
+
             <div id="reader"></div>
             <div id="scanStatus" class="mt-3 font-monospace fw-bold fs-5">Point camera at student QR code</div>
             
-            <div id="scannedInfoCard" class="card mt-3 p-3 bg-success-subtle border-success text-start" style="display:none;">
-              <h6 id="scannedHeaderTitle" class="fw-bold text-success mb-1"></h6>
+            <div id="scannedInfoCard" class="card mt-3 p-3 text-start shadow-sm" style="display:none;">
+              <h6 id="scannedHeaderTitle" class="fw-bold mb-1"></h6>
               <p id="scannedDetails" class="mb-0 small fw-semibold text-dark"></p>
             </div>
 
-            <button class="btn btn-outline-secondary btn-sm mt-4" onclick="lockScanner()">Lock Scanner</button>
+            <button class="btn btn-outline-secondary btn-sm mt-4 px-4 py-2" onclick="lockScanner()">Lock / Change Settings</button>
           </div>
         </div>
       </div>
@@ -395,10 +745,13 @@
 
   </div>
 
+  <!-- Bootstrap JS bundle for modal -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, setDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, getDocs, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
@@ -415,23 +768,264 @@
 
     let html5QrcodeScanner = null;
     let attendanceUnsubscribe = null;
+    let advAttendanceUnsubscribe = null;
     let isProcessingScan = false;
 
+    let activeSession = "Morning";
+    let activeMode = "TimeIn";
+    let detectedScannerSY = "";
+    let loggedInAdviserSection = null;
+    let loggedInAdviserGrade = null;
+    let loggedInAdviserSY = null;
+
     document.getElementById('subjDate').valueAsDate = new Date();
+    document.getElementById('advDate').valueAsDate = new Date();
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     document.getElementById('subjMonthYear').value = `${year}-${month}`;
+    document.getElementById('advMonthYear').value = `${year}-${month}`;
+
+    function capitalizeText(txt) {
+      if (!txt) return "";
+      return txt.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function sortStudentsByGenderAndLastname(students) {
+      return students.sort((a, b) => {
+        const genderA = (a.gender || "").trim().toLowerCase();
+        const genderB = (b.gender || "").trim().toLowerCase();
+        
+        const isMaleA = genderA === "male";
+        const isMaleB = genderB === "male";
+        
+        if (isMaleA && !isMaleB) return -1;
+        if (!isMaleA && isMaleB) return 1;
+
+        const lastNameA = (a.lastName || "").trim().toLowerCase();
+        const lastNameB = (b.lastName || "").trim().toLowerCase();
+        return lastNameA.localeCompare(lastNameB);
+      });
+    }
 
     window.showSection = function(sectionId) {
       document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(sectionId).classList.add('active');
     };
 
-    window.prepareStudentPortal = function() {
+    async function populateSchoolYears(selectElementId, defaultSelected = "") {
+      const selectEl = document.getElementById(selectElementId);
+      if (!selectEl) return;
+
+      const snap = await getDocs(collection(db, "school_years"));
+      let options = '<option value="">Select School Year</option>';
+      snap.forEach(d => {
+        const data = d.data();
+        const selected = (data.sy === defaultSelected) ? "selected" : "";
+        options += `<option value="${data.sy}" ${selected}>${data.sy} (${data.startDate || ''} to ${data.endDate || ''})</option>`;
+      });
+      selectEl.innerHTML = options;
+    }
+
+    window.prepareSubjectTeacherPortal = async function() {
+      showSection('subjectTeacherPortal');
+      await populateSchoolYears('subjSY');
+      document.getElementById('subjSection').innerHTML = '<option value="">-- Select Grade & SY First --</option>';
+    };
+
+    window.prepareAdviserPortal = async function() {
+      showSection('adviserPortal');
+      await populateSchoolYears('advLoginSY');
+      await populateSchoolYears('advRegSY');
+    };
+
+    window.prepareStudentPortal = async function() {
       showSection('studentPortal');
+      await populateSchoolYears('regSYSelect');
       document.getElementById('regGrade').value = "";
-      document.getElementById('regSectionSelect').innerHTML = '<option value="">-- Select Grade First --</option>';
+      document.getElementById('regSectionSelect').innerHTML = '<option value="">-- Select Grade & SY First --</option>';
+    };
+
+    window.prepareAdminPortal = async function() {
+      showSection('adminPortal');
+      document.getElementById('adminLoginPass').value = '';
+      document.getElementById('adminAuthCard').style.display = 'block';
+      document.getElementById('adminDashboardCard').style.display = 'none';
+    };
+
+    window.unlockAdminSetup = async function() {
+      const pass = document.getElementById('adminLoginPass').value.trim();
+      const configSnap = await getDoc(doc(db, "admin_config", "settings"));
+      let adminPass = "admin123";
+      if (configSnap.exists() && configSnap.data().adminPassword) {
+        adminPass = configSnap.data().adminPassword;
+      }
+
+      if (pass === adminPass || pass === "ATLASCAMSCANNER41") {
+        document.getElementById('adminAuthCard').style.display = 'none';
+        document.getElementById('adminDashboardCard').style.display = 'block';
+        loadAdminSchoolYearsList();
+        loadAdminSectionsList();
+      } else {
+        alert("Incorrect Admin Password!");
+      }
+    };
+
+    window.lockAdminSetup = function() {
+      document.getElementById('adminAuthCard').style.display = 'block';
+      document.getElementById('adminDashboardCard').style.display = 'none';
+    };
+
+    window.saveAdminSchoolYear = async function() {
+      const sy = document.getElementById('adminSY').value.trim();
+      const startDate = document.getElementById('adminStartDate').value;
+      const endDate = document.getElementById('adminEndDate').value;
+
+      if (!sy) {
+        alert("Please enter a School Year name (e.g. 2026-2027).");
+        return;
+      }
+
+      await setDoc(doc(db, "school_years", sy), {
+        sy: sy,
+        startDate: startDate,
+        endDate: endDate
+      });
+
+      alert(`School Year ${sy} registered successfully!`);
+      document.getElementById('adminSY').value = '';
+      document.getElementById('adminStartDate').value = '';
+      document.getElementById('adminEndDate').value = '';
+      loadAdminSchoolYearsList();
+    };
+
+    async function loadAdminSchoolYearsList() {
+      const listEl = document.getElementById('adminSYList');
+      const snap = await getDocs(collection(db, "school_years"));
+      if (snap.empty) {
+        listEl.innerHTML = '<li class="list-group-item text-muted small">No school years registered yet.</li>';
+        return;
+      }
+      let html = '';
+      snap.forEach(d => {
+        const data = d.data();
+        html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+          <div><strong>${data.sy}</strong> <small class="text-muted">(${data.startDate || 'N/A'} to ${data.endDate || 'N/A'})</small></div>
+        </li>`;
+      });
+      listEl.innerHTML = html;
+    }
+
+    async function loadAdminSectionsList() {
+      const tbody = document.getElementById('adminSectionsTableBody');
+      const snap = await getDocs(collection(db, "sections"));
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No sections registered yet.</td></tr>';
+        return;
+      }
+      let html = '';
+      snap.forEach(d => {
+        const data = d.data();
+        const sectionId = d.id;
+        html += `<tr>
+          <td><strong>${data.sy}</strong><br><small class="text-muted">${data.grade} - ${data.section}</small></td>
+          <td>${data.teacherName}</td>
+          <td><span class="badge bg-secondary font-monospace">${data.pin}</span></td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-primary px-2 me-1" onclick="openAdminEditSectionModal('${sectionId}')" title="Edit Teacher / PIN">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger px-2" onclick="deleteAdminSection('${sectionId}', '${data.section}')" title="Delete Section">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    window.openAdminEditSectionModal = async function(sectionId) {
+      const docSnap = await getDoc(doc(db, "sections", sectionId));
+      if (!docSnap.exists()) {
+        alert('Section not found.');
+        return;
+      }
+      const data = docSnap.data();
+
+      document.getElementById('adminEditSectionId').value = sectionId;
+      document.getElementById('adminEditSY').value = data.sy;
+      document.getElementById('adminEditGrade').value = data.grade || 'Grade 7';
+      document.getElementById('adminEditSectionName').value = data.section;
+      document.getElementById('adminEditTeacherName').value = data.teacherName;
+      document.getElementById('adminEditPIN').value = data.pin;
+
+      const modal = new bootstrap.Modal(document.getElementById('adminEditSectionModal'));
+      modal.show();
+    };
+
+    window.saveAdminEditedSection = async function() {
+      const oldSectionId = document.getElementById('adminEditSectionId').value;
+      const sy = document.getElementById('adminEditSY').value;
+      const grade = document.getElementById('adminEditGrade').value;
+      const sectionName = document.getElementById('adminEditSectionName').value.trim().toUpperCase();
+      const teacherName = capitalizeText(document.getElementById('adminEditTeacherName').value);
+      const pin = document.getElementById('adminEditPIN').value.trim();
+
+      if (!sectionName || !teacherName || !pin) {
+        alert('All fields are required.');
+        return;
+      }
+
+      const newSectionId = `${sy}_${sectionName}`;
+
+      const sectionData = {
+        sy: sy,
+        grade: grade,
+        section: sectionName,
+        teacherName: teacherName,
+        pin: pin
+      };
+
+      if (oldSectionId !== newSectionId) {
+        await setDoc(doc(db, "sections", newSectionId), sectionData);
+        await deleteDoc(doc(db, "sections", oldSectionId));
+      } else {
+        await updateDoc(doc(db, "sections", oldSectionId), sectionData);
+      }
+
+      alert('Section and teacher details updated successfully!');
+      const modalEl = document.getElementById('adminEditSectionModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+
+      loadAdminSectionsList();
+    };
+
+    window.deleteAdminSection = async function(sectionId, sectionName) {
+      if (confirm(`Are you sure you want to delete section "${sectionName}"? This will not delete enrolled students, but will remove the section registration.`)) {
+        await deleteDoc(doc(db, "sections", sectionId));
+        alert('Section deleted successfully.');
+        loadAdminSectionsList();
+      }
+    };
+
+    window.autoSelectSubjSYByDate = async function() {
+      const dateVal = document.getElementById('subjDate').value;
+      if (!dateVal) return;
+      const snap = await getDocs(collection(db, "school_years"));
+      let matchedSY = "";
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.startDate && data.endDate) {
+          if (dateVal >= data.startDate && dateVal <= data.endDate) {
+            matchedSY = data.sy;
+          }
+        }
+      });
+      if (matchedSY) {
+        document.getElementById('subjSY').value = matchedSY;
+        updateSubjSections();
+      }
     };
 
     window.toggleViewMode = function() {
@@ -449,6 +1043,21 @@
       }
     };
 
+    window.toggleAdvViewMode = function() {
+      const mode = document.getElementById('advViewMode').value;
+      if (mode === 'daily') {
+        document.getElementById('advDailyDateContainer').style.display = 'block';
+        document.getElementById('advMonthlyContainer').style.display = 'none';
+        document.getElementById('advPresentLabel').innerText = 'Total Present';
+        document.getElementById('advAbsentLabel').innerText = 'Total Absent';
+      } else {
+        document.getElementById('advDailyDateContainer').style.display = 'none';
+        document.getElementById('advMonthlyContainer').style.display = 'block';
+        document.getElementById('advPresentLabel').innerText = 'Total Present Days';
+        document.getElementById('advAbsentLabel').innerText = 'Total Absent Days';
+      }
+    };
+
     window.toggleAdviserTab = function(tab) {
       if (tab === 'login') {
         document.getElementById('adviserLoginForm').style.display = 'block';
@@ -463,17 +1072,39 @@
       }
     };
 
+    window.switchAdvTab = function(tabName) {
+      const attTab = document.getElementById('tabAdvAttendance');
+      const studTab = document.getElementById('tabAdvManageStudents');
+      const attView = document.getElementById('advAttendanceView');
+      const studView = document.getElementById('advManageStudentsView');
+
+      if (tabName === 'attendance') {
+        attTab.className = 'nav-link active fw-semibold';
+        studTab.className = 'nav-link fw-semibold';
+        attView.style.display = 'block';
+        studView.style.display = 'none';
+        window.loadAdviserAttendance();
+      } else {
+        studTab.className = 'nav-link active fw-semibold';
+        attTab.className = 'nav-link fw-semibold';
+        studView.style.display = 'block';
+        attView.style.display = 'none';
+        window.loadAdviserStudentsRoster();
+      }
+    };
+
     window.updateSubjSections = async function() {
+      const sy = document.getElementById('subjSY').value;
       const grade = document.getElementById('subjGrade').value;
       const secSelect = document.getElementById('subjSection');
       secSelect.innerHTML = '<option value="">Loading...</option>';
 
-      if (!grade) {
-        secSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+      if (!sy || !grade) {
+        secSelect.innerHTML = '<option value="">-- Select SY & Grade First --</option>';
         return;
       }
 
-      const q = query(collection(db, "sections"), where("grade", "==", grade));
+      const q = query(collection(db, "sections"), where("sy", "==", sy), where("grade", "==", grade));
       const snap = await getDocs(q);
       
       let options = '<option value="">-- Select Section --</option>';
@@ -486,16 +1117,17 @@
     };
 
     window.updateStudentSections = async function() {
+      const sy = document.getElementById('regSYSelect').value;
       const grade = document.getElementById('regGrade').value;
       const secSelect = document.getElementById('regSectionSelect');
       secSelect.innerHTML = '<option value="">Loading sections...</option>';
 
-      if (!grade) {
-        secSelect.innerHTML = '<option value="">-- Select Grade First --</option>';
+      if (!sy || !grade) {
+        secSelect.innerHTML = '<option value="">-- Select SY & Grade First --</option>';
         return;
       }
 
-      const q = query(collection(db, "sections"), where("grade", "==", grade));
+      const q = query(collection(db, "sections"), where("sy", "==", sy), where("grade", "==", grade));
       const snap = await getDocs(q);
 
       let options = '<option value="">-- Select Adviser Created Section --</option>';
@@ -508,24 +1140,27 @@
     };
 
     window.loadAttendanceRecords = async function() {
+      const sy = document.getElementById('subjSY').value;
       const mode = document.getElementById('viewMode').value;
+      const session = document.getElementById('subjSession').value;
       const grade = document.getElementById('subjGrade').value;
       const section = document.getElementById('subjSection').value;
       const tbody = document.getElementById('subjTableBody');
       const headerRow = document.getElementById('tableHeaderRow');
 
-      if (!grade || !section) {
-        alert('Please select Grade and Section.');
+      if (!sy || !grade || !section) {
+        alert('Please select School Year, Grade, and Section.');
         return;
       }
 
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
 
-      const stQuery = query(collection(db, "students"), where("section", "==", section));
+      const stQuery = query(collection(db, "students"), where("sy", "==", sy), where("section", "==", section));
       const stSnap = await getDocs(stQuery);
       
       const studentsList = [];
       stSnap.forEach(doc => studentsList.push(doc.data()));
+      sortStudentsByGenderAndLastname(studentsList);
 
       if (studentsList.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No registered students found in this section.</td></tr>';
@@ -546,7 +1181,13 @@
         }
 
         if (attendanceUnsubscribe) attendanceUnsubscribe();
-        const logsQuery = query(collection(db, "attendance_logs"), where("section", "==", section), where("date", "==", date));
+        const logsQuery = query(
+          collection(db, "attendance_logs"), 
+          where("sy", "==", sy),
+          where("section", "==", section), 
+          where("date", "==", date),
+          where("session", "==", session)
+        );
         
         attendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
           const loggedDataMap = {};
@@ -564,8 +1205,8 @@
             if (isPresent) presentCounter++;
 
             const badge = isPresent 
-              ? '<span class="badge bg-success">PRESENT</span>' 
-              : '<span class="badge bg-danger">ABSENT</span>';
+              ? '<span class="badge bg-success px-2 py-1">PRESENT</span>' 
+              : '<span class="badge bg-danger px-2 py-1">ABSENT</span>';
 
             html += `<tr>
               <td>${st.lrn}</td>
@@ -590,7 +1231,13 @@
           return;
         }
 
-        const logsSnap = await getDocs(query(collection(db, "attendance_logs"), where("section", "==", section)));
+        const logsSnap = await getDocs(query(
+          collection(db, "attendance_logs"), 
+          where("sy", "==", sy),
+          where("section", "==", section),
+          where("session", "==", session)
+        ));
+        
         const distinctDaysSet = new Set();
         const studentPresentDays = {};
 
@@ -633,40 +1280,305 @@
       }
     };
 
-    window.downloadSectionQRs = async function() {
-      const grade = document.getElementById('subjGrade').value;
-      const section = document.getElementById('subjSection').value;
+    window.loadAdviserAttendance = async function() {
+      if (!loggedInAdviserSection) return;
 
-      if (!grade || !section) {
-        alert('Please select a Grade and Section first, then click Load Class Records.');
-        return;
-      }
+      const mode = document.getElementById('advViewMode').value;
+      const session = document.getElementById('advSession').value;
+      const tbody = document.getElementById('advTableBody');
+      const headerRow = document.getElementById('advTableHeaderRow');
 
-      const stQuery = query(collection(db, "students"), where("section", "==", section));
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading records...</td></tr>';
+
+      const stQuery = query(collection(db, "students"), where("sy", "==", loggedInAdviserSY), where("section", "==", loggedInAdviserSection));
       const stSnap = await getDocs(stQuery);
       
       const studentsList = [];
       stSnap.forEach(doc => studentsList.push(doc.data()));
+      sortStudentsByGenderAndLastname(studentsList);
 
       if (studentsList.length === 0) {
-        alert('No students found in this section.');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No registered students found in your section.</td></tr>';
+        document.getElementById('advTotalCount').innerText = '0';
+        document.getElementById('advPresentCount').innerText = '0';
+        document.getElementById('advAbsentCount').innerText = '0';
+        return;
+      }
+
+      document.getElementById('advTotalCount').innerText = studentsList.length;
+
+      if (mode === 'daily') {
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Gender</th><th>Status</th><th>Time In</th><th>Time Out</th></tr>`;
+        const date = document.getElementById('advDate').value;
+        if (!date) {
+          alert('Please select a date.');
+          return;
+        }
+
+        if (advAttendanceUnsubscribe) advAttendanceUnsubscribe();
+        const logsQuery = query(
+          collection(db, "attendance_logs"), 
+          where("sy", "==", loggedInAdviserSY),
+          where("section", "==", loggedInAdviserSection), 
+          where("date", "==", date),
+          where("session", "==", session)
+        );
+        
+        advAttendanceUnsubscribe = onSnapshot(logsQuery, (snapshot) => {
+          const loggedDataMap = {};
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            loggedDataMap[data.lrn] = data;
+          });
+
+          let presentCounter = 0;
+          let html = '';
+
+          studentsList.forEach(st => {
+            const log = loggedDataMap[st.lrn];
+            const isPresent = !!log;
+            if (isPresent) presentCounter++;
+
+            const badge = isPresent 
+              ? '<span class="badge bg-success px-2 py-1">PRESENT</span>' 
+              : '<span class="badge bg-danger px-2 py-1">ABSENT</span>';
+
+            html += `<tr>
+              <td>${st.lrn}</td>
+              <td class="fw-semibold">${st.name}</td>
+              <td>${st.gender || 'N/A'}</td>
+              <td>${badge}</td>
+              <td>${isPresent ? (log.timeStr || '--') : '--'}</td>
+              <td>${isPresent ? (log.timeOutStr || '--') : '--'}</td>
+            </tr>`;
+          });
+
+          tbody.innerHTML = html;
+          document.getElementById('advPresentCount').innerText = presentCounter;
+          document.getElementById('advAbsentCount').innerText = studentsList.length - presentCounter;
+        });
+
+      } else {
+        headerRow.innerHTML = `<tr><th>LRN</th><th>Student Name</th><th>Gender</th><th>Days Present</th><th>Days Absent</th><th>Attendance Rate</th></tr>`;
+        const monthYear = document.getElementById('advMonthYear').value;
+        if (!monthYear) {
+          alert('Please select a month and year.');
+          return;
+        }
+
+        const logsSnap = await getDocs(query(
+          collection(db, "attendance_logs"), 
+          where("sy", "==", loggedInAdviserSY),
+          where("section", "==", loggedInAdviserSection),
+          where("session", "==", session)
+        ));
+        
+        const distinctDaysSet = new Set();
+        const studentPresentDays = {};
+
+        logsSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.date && data.date.startsWith(monthYear)) {
+            distinctDaysSet.add(data.date);
+            if (!studentPresentDays[data.lrn]) studentPresentDays[data.lrn] = new Set();
+            studentPresentDays[data.lrn].add(data.date);
+          }
+        });
+
+        const totalSchoolDays = distinctDaysSet.size;
+        let totalPresentAccumulator = 0;
+        let totalAbsentAccumulator = 0;
+        let html = '';
+
+        studentsList.forEach(st => {
+          const presentCount = studentPresentDays[st.lrn] ? studentPresentDays[st.lrn].size : 0;
+          const absentCount = Math.max(0, totalSchoolDays - presentCount);
+          totalPresentAccumulator += presentCount;
+          totalAbsentAccumulator += absentCount;
+
+          const rate = totalSchoolDays > 0 ? Math.round((presentCount / totalSchoolDays) * 100) : 0;
+          const rateBadge = rate >= 75 ? `<span class="badge bg-success">${rate}%</span>` : `<span class="badge bg-danger">${rate}%</span>`;
+
+          html += `<tr>
+            <td>${st.lrn}</td>
+            <td class="fw-semibold">${st.name}</td>
+            <td>${st.gender || 'N/A'}</td>
+            <td><span class="text-success fw-bold">${presentCount} days</span></td>
+            <td><span class="text-danger fw-bold">${absentCount} days</span></td>
+            <td>${rateBadge}</td>
+          </tr>`;
+        });
+
+        tbody.innerHTML = html;
+        document.getElementById('advPresentCount').innerText = totalPresentAccumulator;
+        document.getElementById('advAbsentCount').innerText = totalAbsentAccumulator;
+      }
+    };
+
+    window.loadAdviserStudentsRoster = async function() {
+      if (!loggedInAdviserSection) return;
+      const tbody = document.getElementById('advStudentsTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div> Loading roster...</td></tr>';
+
+      const q = query(collection(db, "students"), where("sy", "==", loggedInAdviserSY), where("section", "==", loggedInAdviserSection));
+      const snap = await getDocs(q);
+
+      const students = [];
+      snap.forEach(d => students.push(d.data()));
+      sortStudentsByGenderAndLastname(students);
+
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No students registered in this section yet.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      students.forEach(st => {
+        html += `<tr>
+          <td>${st.lrn}</td>
+          <td class="fw-semibold">${st.name}</td>
+          <td>${st.gender || 'N/A'}</td>
+          <td>${st.grade} - ${st.section}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline-primary px-3 fw-semibold me-1" onclick="openEditStudentModal('${st.lrn}')">
+              <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-outline-danger px-3 fw-semibold" onclick="deleteStudentDirect('${st.lrn}', '${st.name}')">
+              <i class="fa-solid fa-trash me-1"></i> Delete
+            </button>
+          </td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    };
+
+    window.openEditStudentModal = async function(lrn) {
+      const docRef = doc(db, "students", lrn);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        alert('Student not found.');
+        return;
+      }
+      const data = docSnap.data();
+
+      document.getElementById('editModalOriginalLRN').value = data.lrn;
+      document.getElementById('editModalLRN').value = data.lrn;
+      document.getElementById('editModalFirstName').value = data.firstName || '';
+      document.getElementById('editModalMiddleName').value = data.middleName || '';
+      document.getElementById('editModalLastName').value = data.lastName || '';
+      document.getElementById('editModalSuffix').value = data.suffix || '';
+      document.getElementById('editModalGender').value = data.gender || 'Male';
+
+      const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+      modal.show();
+    };
+
+    window.saveEditedStudent = async function() {
+      const originalLRN = document.getElementById('editModalOriginalLRN').value;
+      const newLRN = document.getElementById('editModalLRN').value.trim();
+      const rawFirst = document.getElementById('editModalFirstName').value.trim();
+      const rawMiddle = document.getElementById('editModalMiddleName').value.trim();
+      const rawLast = document.getElementById('editModalLastName').value.trim();
+      const rawSuffix = document.getElementById('editModalSuffix').value.trim();
+      const gender = document.getElementById('editModalGender').value;
+
+      if (!newLRN || !rawFirst || !rawLast) {
+        alert('LRN, First Name, and Last Name are required.');
+        return;
+      }
+
+      const firstName = capitalizeText(rawFirst);
+      const middleName = capitalizeText(rawMiddle);
+      const lastName = capitalizeText(rawLast);
+      const suffix = rawSuffix ? ` ${rawSuffix}` : '';
+      const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
+      const fullName = `${lastName}, ${firstName}${middleInitial}${suffix}`;
+
+      const studentData = {
+        lrn: newLRN,
+        sy: loggedInAdviserSY,
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+        suffix: rawSuffix,
+        name: fullName,
+        gender: gender,
+        grade: loggedInAdviserGrade,
+        section: loggedInAdviserSection
+      };
+
+      if (originalLRN !== newLRN) {
+        await setDoc(doc(db, "students", newLRN), studentData);
+        await deleteDoc(doc(db, "students", originalLRN));
+      } else {
+        await updateDoc(doc(db, "students", originalLRN), studentData);
+      }
+
+      alert('Student information updated successfully!');
+      const modalEl = document.getElementById('editStudentModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+
+      window.loadAdviserStudentsRoster();
+    };
+
+    window.deleteStudentDirect = async function(lrn, name) {
+      if (confirm(`Are you sure you want to permanently delete student "${name}" (LRN: ${lrn})?`)) {
+        await deleteDoc(doc(db, "students", lrn));
+        alert('Student deleted successfully.');
+        window.loadAdviserStudentsRoster();
+      }
+    };
+
+    window.deleteStudentFromModal = async function() {
+      const lrn = document.getElementById('editModalOriginalLRN').value;
+      const firstName = document.getElementById('editModalFirstName').value;
+      const lastName = document.getElementById('editModalLastName').value;
+
+      if (confirm(`Are you sure you want to permanently delete ${firstName} ${lastName} (LRN: ${lrn})?`)) {
+        await deleteDoc(doc(db, "students", lrn));
+        alert('Student deleted successfully.');
+
+        const modalEl = document.getElementById('editStudentModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        window.loadAdviserStudentsRoster();
+      }
+    };
+
+    window.downloadAdviserSectionQRs = async function() {
+      if (!loggedInAdviserSection) {
+        alert('No section selected.');
+        return;
+      }
+
+      const stQuery = query(collection(db, "students"), where("sy", "==", loggedInAdviserSY), where("section", "==", loggedInAdviserSection));
+      const stSnap = await getDocs(stQuery);
+      
+      const studentsList = [];
+      stSnap.forEach(doc => studentsList.push(doc.data()));
+      sortStudentsByGenderAndLastname(studentsList);
+
+      if (studentsList.length === 0) {
+        alert('No students found registered under your section.');
         return;
       }
 
       const container = document.getElementById('printQRContainer');
       let html = `<div style="padding: 20px; font-family: Arial, sans-serif;">
-                    <h2 style="text-align: center; margin-bottom: 5px;">Section ${section} - Student QR Code IDs</h2>
-                    <p style="text-align: center; margin-bottom: 20px; color: #555;">Grade Level: ${grade}</p>
+                    <h2 style="text-align: center; margin-bottom: 5px;">Section ${loggedInAdviserSection} (${loggedInAdviserSY}) - Student QR Code IDs</h2>
+                    <p style="text-align: center; margin-bottom: 20px; color: #555;">Grade Level: ${loggedInAdviserGrade}</p>
                     <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">`;
 
       studentsList.forEach(st => {
-        const qrPayload = JSON.stringify({ lrn: st.lrn, name: st.name, section: st.section });
+        const qrPayload = JSON.stringify({ lrn: st.lrn, name: st.name, section: st.section, sy: st.sy });
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrPayload)}`;
 
         html += `<div style="border: 2px solid #ccc; border-radius: 8px; padding: 15px; text-align: center; width: 220px; background: #fff; page-break-inside: avoid; margin-bottom: 15px;">
                    <h5 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold;">${st.name}</h5>
                    <p style="margin: 0 0 5px 0; font-size: 12px; color: #666;">LRN: ${st.lrn}<br>Gender: ${st.gender || 'N/A'}</p>
-                   <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">${grade} - ${st.section}</p>
+                   <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">${loggedInAdviserGrade} - ${st.section} (${loggedInAdviserSY})</p>
                    <img src="${qrUrl}" alt="QR" style="width: 140px; height: 140px;"/>
                  </div>`;
       });
@@ -709,107 +1621,141 @@
       const section = document.getElementById('advRegSection').value.trim().toUpperCase();
       const pin = document.getElementById('advRegPIN').value.trim();
 
-      if (!name || !section || !pin) {
-        alert('Please complete all fields.');
+      if (!sy || !name || !section || !pin) {
+        alert('Please complete all fields including School Year.');
         return;
       }
 
-      await setDoc(doc(db, "sections", section), {
+      const sectionId = `${sy}_${section}`;
+      await setDoc(doc(db, "sections", sectionId), {
         sy: sy,
-        teacherName: name,
+        teacherName: capitalizeText(name),
         grade: grade,
         section: section,
         pin: pin
       });
 
-      alert(`Section ${section} registered successfully!`);
+      alert(`Section ${section} for SY ${sy} registered successfully!`);
       document.getElementById('advRegName').value = '';
       document.getElementById('advRegSection').value = '';
       document.getElementById('advRegPIN').value = '';
     };
 
     window.loginAdviser = async function() {
+      const sy = document.getElementById('advLoginSY').value;
       const pin = document.getElementById('advLoginPIN').value.trim();
-      if (!pin) {
-        alert('Please enter your PIN.');
+      if (!sy || !pin) {
+        alert('Please select School Year and enter your PIN.');
         return;
       }
 
-      const q = query(collection(db, "sections"), where("pin", "==", pin));
+      const q = query(collection(db, "sections"), where("sy", "==", sy), where("pin", "==", pin));
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        alert('Invalid Teacher PIN!');
+        alert('Invalid School Year or Teacher PIN!');
       } else {
         const secData = snap.docs[0].data();
-        alert(`Welcome, ${secData.teacherName}! (Section: ${secData.section})`);
-        showSection('subjectTeacherPortal');
-        document.getElementById('subjGrade').value = secData.grade;
-        await window.updateSubjSections();
-        document.getElementById('subjSection').value = secData.section;
+        loggedInAdviserSection = secData.section;
+        loggedInAdviserGrade = secData.grade;
+        loggedInAdviserSY = secData.sy;
+
+        document.getElementById('advWelcomeTitle').innerText = `Welcome, ${secData.teacherName}`;
+        document.getElementById('advSectionSubtitle').innerText = `SY: ${secData.sy} | Grade & Section: ${secData.grade} - ${secData.section}`;
+
+        document.getElementById('adviserAuthCard').style.display = 'none';
+        document.getElementById('adviserDashboardCard').style.display = 'block';
+
+        window.switchAdvTab('attendance');
       }
     };
 
-    window.saveAdminConfig = async function() {
-      const sy = document.getElementById('adminSY').value.trim();
-      const start = document.getElementById('adminStartDate').value;
-      const end = document.getElementById('adminEndDate').value;
-      const pass = document.getElementById('adminPass').value.trim();
-
-      if (!sy || !pass) {
-        alert('Please fill in required fields.');
-        return;
-      }
-
-      await setDoc(doc(db, "admin_config", "settings"), {
-        schoolYear: sy,
-        startDate: start,
-        endDate: end,
-        adminPassword: pass
-      });
-
-      alert('Admin Configuration Saved Successfully!');
+    window.logoutAdviser = function() {
+      if (advAttendanceUnsubscribe) advAttendanceUnsubscribe();
+      loggedInAdviserSection = null;
+      loggedInAdviserGrade = null;
+      loggedInAdviserSY = null;
+      document.getElementById('advLoginPIN').value = '';
+      document.getElementById('adviserAuthCard').style.display = 'block';
+      document.getElementById('adviserDashboardCard').style.display = 'none';
     };
 
     window.registerStudent = async function() {
+      const sy = document.getElementById('regSYSelect').value;
       const lrn = document.getElementById('regLRN').value.trim();
-      const firstName = document.getElementById('regFirstName').value.trim();
-      const middleName = document.getElementById('regMiddleName').value.trim();
-      const lastName = document.getElementById('regLastName').value.trim();
+      const rawFirst = document.getElementById('regFirstName').value.trim();
+      const rawMiddle = document.getElementById('regMiddleName').value.trim();
+      const rawLast = document.getElementById('regLastName').value.trim();
+      const rawSuffix = document.getElementById('regSuffix').value.trim();
       const gender = document.getElementById('regGender').value;
       const grade = document.getElementById('regGrade').value;
       const section = document.getElementById('regSectionSelect').value;
 
-      if (!lrn || !firstName || !lastName || !gender || !grade || !section) {
-        alert('Please fill in LRN, First Name, Last Name, Gender, Grade, and select a Section.');
+      if (!sy || !lrn || !rawFirst || !rawLast || !gender || !grade || !section) {
+        alert('Please fill in all required fields including School Year.');
         return;
       }
 
+      const firstName = capitalizeText(rawFirst);
+      const middleName = capitalizeText(rawMiddle);
+      const lastName = capitalizeText(rawLast);
+      const suffix = rawSuffix ? ` ${rawSuffix}` : '';
       const middleInitial = middleName ? ` ${middleName.charAt(0)}.` : '';
-      const fullName = `${lastName}, ${firstName}${middleInitial}`;
+      
+      const fullName = `${lastName}, ${firstName}${middleInitial}${suffix}`;
 
       await setDoc(doc(db, "students", lrn), {
         lrn: lrn,
+        sy: sy,
         firstName: firstName,
         middleName: middleName,
         lastName: lastName,
+        suffix: rawSuffix,
         name: fullName,
         gender: gender,
         grade: grade,
         section: section
       });
 
-      const qrPayload = JSON.stringify({ lrn, name: fullName, section });
+      const qrPayload = JSON.stringify({ lrn, name: fullName, section, sy });
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrPayload)}`;
 
       document.getElementById('qrDisplay').src = qrUrl;
-      document.getElementById('qrInfo').innerHTML = `${fullName}<br><small class="text-muted">LRN: ${lrn} | Gender: ${gender} | ${grade} - ${section}</small>`;
+      document.getElementById('qrInfo').innerHTML = `${fullName}<br><small class="text-muted">LRN: ${lrn} | SY: ${sy} | Gender: ${gender} | ${grade} - ${section}</small>`;
       document.getElementById('qrResultCard').style.display = 'block';
     };
 
-    window.unlockScanner = function() {
+    window.unlockScanner = async function() {
       const pass = document.getElementById('scannerPasswordInput').value;
       if (pass === 'ATLASCAMSCANNER41') {
+        activeSession = document.getElementById('scannerSessionSelect').value;
+        activeMode = document.getElementById('scannerModeSelect').value;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const sySnap = await getDocs(collection(db, "school_years"));
+        detectedScannerSY = "";
+        sySnap.forEach(d => {
+          const data = d.data();
+          if (data.startDate && data.endDate) {
+            if (todayStr >= data.startDate && todayStr <= data.endDate) {
+              detectedScannerSY = data.sy;
+            }
+          }
+        });
+
+        if (!detectedScannerSY) {
+          sySnap.forEach(d => {
+            if (!detectedScannerSY) detectedScannerSY = d.data().sy;
+          });
+        }
+
+        document.getElementById('scannerAutoSY').value = detectedScannerSY || "Default SY";
+
+        document.getElementById('activeSYBadge').innerText = `SY: ${detectedScannerSY || 'General'}`;
+        document.getElementById('activeSessionBadge').innerText = activeSession;
+        document.getElementById('activeModeBadge').innerText = activeMode === 'TimeIn' ? 'Time-In' : 'Time-Out';
+        document.getElementById('activeModeBadge').className = activeMode === 'TimeIn' ? 'badge bg-success fs-6' : 'badge bg-primary fs-6';
+
         document.getElementById('scannerAuthCard').style.display = 'none';
         document.getElementById('activeScannerCard').style.display = 'block';
         startScanner();
@@ -834,7 +1780,6 @@
       html5QrcodeScanner.render(onScanSuccess, (err) => {});
     }
 
-    // Smart Scanner Logic: 1st Scan = Time In | 2nd Scan = Time Out
     async function onScanSuccess(decodedText) {
       if (isProcessingScan) return;
 
@@ -851,50 +1796,77 @@
           return;
         }
 
+        const studentSY = student.sy || detectedScannerSY;
+
         isProcessingScan = true;
         statusDiv.className = "mt-3 text-info";
-        statusDiv.innerText = "Checking student status...";
+        statusDiv.innerText = "Processing scan...";
 
         const today = new Date().toISOString().split('T')[0];
         const timeNow = new Date().toLocaleTimeString();
 
-        // Check if student has already scanned today
-        const q = query(collection(db, "attendance_logs"), where("lrn", "==", student.lrn.trim()), where("date", "==", today));
+        const q = query(
+          collection(db, "attendance_logs"), 
+          where("sy", "==", studentSY),
+          where("lrn", "==", student.lrn.trim()), 
+          where("date", "==", today),
+          where("session", "==", activeSession)
+        );
         const snap = await getDocs(q);
 
-        if (snap.empty) {
-          // --- 1ST SCAN: RECORD TIME IN ---
-          await addDoc(collection(db, "attendance_logs"), {
-            lrn: student.lrn.trim(),
-            name: student.name.trim(),
-            section: student.section.trim().toUpperCase(),
-            date: today,
-            timestamp: serverTimestamp(),
-            timeStr: timeNow,
-            timeOutStr: null
-          });
+        if (activeMode === "TimeIn") {
+          if (snap.empty) {
+            await addDoc(collection(db, "attendance_logs"), {
+              sy: studentSY,
+              lrn: student.lrn.trim(),
+              name: student.name.trim(),
+              section: student.section.trim().toUpperCase(),
+              date: today,
+              session: activeSession,
+              timestamp: serverTimestamp(),
+              timeStr: timeNow,
+              timeOutStr: null
+            });
 
-          statusDiv.className = "mt-3 text-success";
-          statusDiv.innerText = `SUCCESS: TIME IN Recorded!`;
+            statusDiv.className = "mt-3 text-success";
+            statusDiv.innerText = `SUCCESS: TIME IN Recorded (${activeSession})!`;
 
-          headerTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> TIME IN Recorded!`;
-          headerTitle.className = "fw-bold text-success mb-1";
-          detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
-          infoCard.className = "card mt-3 p-3 bg-success-subtle border-success text-start";
-        } else {
-          // --- 2ND SCAN: RECORD TIME OUT ---
-          const logDoc = snap.docs[0];
-          await updateDoc(doc(db, "attendance_logs", logDoc.id), {
-            timeOutStr: timeNow
-          });
+            headerTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> TIME IN Recorded (${activeSession})`;
+            headerTitle.className = "fw-bold text-success mb-1";
+            detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>SY:</strong> ${studentSY}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
+            infoCard.className = "card mt-3 p-3 bg-success-subtle border-success text-start";
+          } else {
+            statusDiv.className = "mt-3 text-warning";
+            statusDiv.innerText = `Already Checked In for ${activeSession}!`;
 
-          statusDiv.className = "mt-3 text-primary";
-          statusDiv.innerText = `SUCCESS: TIME OUT Recorded!`;
+            headerTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Already Scanned Time-In`;
+            headerTitle.className = "fw-bold text-warning mb-1";
+            detailsText.innerHTML = `<strong>${student.name}</strong> has already completed Time-In for the ${activeSession} session today.`;
+            infoCard.className = "card mt-3 p-3 bg-warning-subtle border-warning text-start";
+          }
+        } else { // TimeOut Mode
+          if (!snap.empty) {
+            const logDoc = snap.docs[0];
+            await updateDoc(doc(db, "attendance_logs", logDoc.id), {
+              timeOutStr: timeNow
+            });
 
-          headerTitle.innerHTML = `<i class="fa-solid fa-right-from-bracket me-1"></i> TIME OUT Recorded!`;
-          headerTitle.className = "fw-bold text-primary mb-1";
-          detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>Section:</strong> ${student.section}<br><strong>Time Out:</strong> ${timeNow}`;
-          infoCard.className = "card mt-3 p-3 bg-info-subtle border-info text-start";
+            statusDiv.className = "mt-3 text-primary";
+            statusDiv.innerText = `SUCCESS: TIME OUT Recorded (${activeSession})!`;
+
+            headerTitle.innerHTML = `<i class="fa-solid fa-right-from-bracket me-1"></i> TIME OUT Recorded (${activeSession})`;
+            headerTitle.className = "fw-bold text-primary mb-1";
+            detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>SY:</strong> ${studentSY}<br><strong>Section:</strong> ${student.section}<br><strong>Time Out:</strong> ${timeNow}`;
+            infoCard.className = "card mt-3 p-3 bg-info-subtle border-info text-start";
+          } else {
+            statusDiv.className = "mt-3 text-danger";
+            statusDiv.innerText = `No Time-In record found for ${activeSession}!`;
+
+            headerTitle.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Cannot Record Time-Out`;
+            headerTitle.className = "fw-bold text-danger mb-1";
+            detailsText.innerHTML = `<strong>${student.name}</strong> does not have a Time-In record for the ${activeSession} session today.`;
+            infoCard.className = "card mt-3 p-3 bg-danger-subtle border-danger text-start";
+          }
         }
 
         infoCard.style.display = 'block';
