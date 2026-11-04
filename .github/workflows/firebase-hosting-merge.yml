@@ -13,5 +13,6 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: ''
           channelId: live
+          projectId: atlas-a7657
         env:
           FIREBASE_TOKEN: '${{ secrets.FIREBASE_TOKEN }}'
