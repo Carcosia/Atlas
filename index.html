@@ -91,7 +91,7 @@
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
           <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-primary border-4" onclick="prepareSubjectTeacherPortal()">
             <i class="fa-solid fa-book text-primary display-4 mb-3"></i>
-            <h5 class="fw-bold text-primary">SUBJECT TEACHER</h5>
+            <h5 class="fw-bold text-primary">TEACHER PORTAL</h5>
             <p class="text-muted small mb-0">Class Records & Summaries</p>
           </div>
         </div>
@@ -100,7 +100,7 @@
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
           <div class="card role-card text-center p-4 shadow-sm h-100 border-top border-info border-4" onclick="prepareAdviserPortal()">
             <i class="fa-solid fa-chalkboard-user text-info display-4 mb-3"></i>
-            <h5 class="fw-bold text-info">ADVISER</h5>
+            <h5 class="fw-bold text-info">ADVISER LOGIN</h5>
             <p class="text-muted small mb-0">Register & Manage Sections</p>
           </div>
         </div>
@@ -218,8 +218,6 @@
                 <th>Student Name</th>
                 <th>Gender</th>
                 <th>Status</th>
-                <th>Time In</th>
-                <th>Time Out</th>
               </tr>
             </thead>
             <tbody id="subjTableBody">
@@ -714,7 +712,7 @@
 
             <div class="mb-3">
               <label class="form-label fw-semibold">Enter Security Password</label>
-              <input type="password" id="scannerPasswordInput" class="form-control" placeholder="Enter Password">
+              <input type="password" id="scannerPasswordInput" class="form-control" placeholder="ATLASCAMSCANNER41">
             </div>
             <button class="btn btn-danger w-100 fw-bold py-2" onclick="unlockScanner()">Unlock & Start Camera</button>
           </div>
@@ -1789,27 +1787,46 @@
       const detailsText = document.getElementById('scannedDetails');
 
       try {
-        const student = JSON.parse(decodedText);
-        if (!student.lrn || !student.name) {
+        let student = {};
+        try {
+          student = JSON.parse(decodedText);
+        } catch (err) {
+          student = { lrn: decodedText.trim(), name: "Student", section: "" };
+        }
+
+        const lrn = (student.lrn || "").toString().trim();
+        if (!lrn) {
           statusDiv.className = "mt-3 text-danger";
           statusDiv.innerText = "Invalid Student QR!";
           return;
         }
 
-        const studentSY = student.sy || detectedScannerSY;
+        // Use auto-detected SY if not embedded or fallback
+        const studentSY = detectedScannerSY || student.sy || "";
 
         isProcessingScan = true;
         statusDiv.className = "mt-3 text-info";
-        statusDiv.innerText = "Processing scan...";
+        statusDiv.innerText = `Processing ${activeSession} scan...`;
 
         const today = new Date().toISOString().split('T')[0];
         const timeNow = new Date().toLocaleTimeString();
 
-        // Query specifically for the active session (Morning or Afternoon)
+        // Database lookup student details fallback if missing
+        let fullName = student.name || "Student";
+        let section = (student.section || "").toUpperCase();
+
+        const stDocRef = doc(db, "students", lrn);
+        const stSnap = await getDoc(stDocRef);
+        if (stSnap.exists()) {
+          const stData = stSnap.data();
+          fullName = stData.name || fullName;
+          section = stData.section || section;
+        }
+
+        // Query Firestore logs strictly by session and date
         const q = query(
-          collection(db, "attendance_logs"), 
-          where("sy", "==", studentSY),
-          where("lrn", "==", student.lrn.trim()), 
+          collection(db, "attendance_logs"),
+          where("lrn", "==", lrn),
           where("date", "==", today),
           where("session", "==", activeSession)
         );
@@ -1819,9 +1836,9 @@
           if (snap.empty) {
             await addDoc(collection(db, "attendance_logs"), {
               sy: studentSY,
-              lrn: student.lrn.trim(),
-              name: student.name.trim(),
-              section: student.section.trim().toUpperCase(),
+              lrn: lrn,
+              name: fullName,
+              section: section,
               date: today,
               session: activeSession,
               timestamp: serverTimestamp(),
@@ -1834,7 +1851,7 @@
 
             headerTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> TIME IN Recorded (${activeSession})`;
             headerTitle.className = "fw-bold text-success mb-1";
-            detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>SY:</strong> ${studentSY}<br><strong>Section:</strong> ${student.section}<br><strong>Time In:</strong> ${timeNow}`;
+            detailsText.innerHTML = `<strong>Name:</strong> ${fullName}<br><strong>LRN:</strong> ${lrn}<br><strong>SY:</strong> ${studentSY || 'N/A'}<br><strong>Section:</strong> ${section}<br><strong>Time In:</strong> ${timeNow}`;
             infoCard.className = "card mt-3 p-3 bg-success-subtle border-success text-start";
           } else {
             statusDiv.className = "mt-3 text-warning";
@@ -1842,7 +1859,7 @@
 
             headerTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Already Scanned Time-In`;
             headerTitle.className = "fw-bold text-warning mb-1";
-            detailsText.innerHTML = `<strong>${student.name}</strong> has already completed Time-In for the ${activeSession} session today.`;
+            detailsText.innerHTML = `<strong>${fullName}</strong> has already completed Time-In for the ${activeSession} session today.`;
             infoCard.className = "card mt-3 p-3 bg-warning-subtle border-warning text-start";
           }
         } else { // TimeOut Mode
@@ -1857,7 +1874,7 @@
 
             headerTitle.innerHTML = `<i class="fa-solid fa-right-from-bracket me-1"></i> TIME OUT Recorded (${activeSession})`;
             headerTitle.className = "fw-bold text-primary mb-1";
-            detailsText.innerHTML = `<strong>Name:</strong> ${student.name}<br><strong>LRN:</strong> ${student.lrn}<br><strong>SY:</strong> ${studentSY}<br><strong>Section:</strong> ${student.section}<br><strong>Time Out:</strong> ${timeNow}`;
+            detailsText.innerHTML = `<strong>Name:</strong> ${fullName}<br><strong>LRN:</strong> ${lrn}<br><strong>SY:</strong> ${studentSY || 'N/A'}<br><strong>Section:</strong> ${section}<br><strong>Time Out:</strong> ${timeNow}`;
             infoCard.className = "card mt-3 p-3 bg-info-subtle border-info text-start";
           } else {
             statusDiv.className = "mt-3 text-danger";
@@ -1865,7 +1882,7 @@
 
             headerTitle.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Cannot Record Time-Out`;
             headerTitle.className = "fw-bold text-danger mb-1";
-            detailsText.innerHTML = `<strong>${student.name}</strong> does not have a Time-In record for the ${activeSession} session today.`;
+            detailsText.innerHTML = `<strong>${fullName}</strong> does not have a Time-In record for the ${activeSession} session today.`;
             infoCard.className = "card mt-3 p-3 bg-danger-subtle border-danger text-start";
           }
         }
@@ -1880,8 +1897,9 @@
         }, 3000);
 
       } catch (e) {
+        console.error("Scan processing error:", e);
         statusDiv.className = "mt-3 text-danger";
-        statusDiv.innerText = "Error decoding QR Code!";
+        statusDiv.innerText = "Error processing QR Code!";
         isProcessingScan = false;
       }
     }
