@@ -1,11 +1,15 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
+  "name": "Atlas Parent Portal",
+  "short_name": "Atlas Parents",
+  "start_url": "/parent.html",
   "display": "standalone",
-  "name": "Atlas Parent Tracker",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "Parent Tracker",
-  "start_url": "parent.html",
-  "theme_color": "#ffffff"
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
 }
