@@ -1,63 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parent LRN Live Tracker - Atlas</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Atlas Parent Portal</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#635bff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Atlas Parents" />
 
-  <!-- PWA Manifest Link -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffc107">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- FontAwesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
   <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .btn-purple { background-color: #635bff; color: #fff; }
+    .btn-purple:hover { background-color: #5147e5; color: #fff; }
+    .text-purple { color: #635bff !important; }
+    .border-purple { border-color: #635bff !important; }
+    .bg-purple-soft { background-color: rgba(99, 91, 255, 0.1); }
+    .pulse-dot {
+      height: 10px;
+      width: 10px;
+      background-color: #198754;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(25, 135, 84, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+    }
   </style>
 </head>
-<body>
+<body class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-3">
 
-  <nav class="navbar navbar-dark bg-dark px-4 py-3 mb-4 shadow-sm">
-    <div class="container-fluid">
-      <span class="navbar-brand mb-0 h1 fw-bold">
-        <i class="fa-solid fa-mobile-screen-button text-warning me-2"></i>Parent LRN Live Tracker
-      </span>
-    </div>
-  </nav>
+  <div class="card shadow-sm border-0 border-top border-purple border-4 w-100" style="max-width: 440px; border-radius: 16px;">
+    <div class="card-body p-4">
 
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card shadow-sm p-4 border-warning">
-          <h4 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-bell text-warning me-2"></i>Campus Arrival Tracker</h4>
-          <p class="text-muted small mb-4">Type your child's 12-digit LRN below to check if they have safely arrived on campus today.</p>
-          
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Child LRN Number</label>
-            <input type="text" id="parentLRNInput" class="form-control" placeholder="Enter LRN (e.g., 124770140247)">
-          </div>
-          
-          <button class="btn btn-warning w-100 fw-bold py-2 text-dark shadow-sm" onclick="checkParentChildStatus()">
-            <i class="fa-solid fa-magnifying-glass me-1"></i> Check Arrival Status
-          </button>
+      <!-- Header -->
+      <div class="text-center border-bottom pb-3 mb-3">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-4 bg-purple-soft text-purple mb-2" style="width: 56px; height: 56px; font-size: 1.6rem;">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h4 class="fw-bold text-dark mb-1">Atlas Parent Portal</h4>
+        <p class="text-muted small mb-0">Real-Time Campus Arrival & Attendance Monitor</p>
+      </div>
 
-          <!-- Result Pop-up Box -->
-          <div id="parentResultCard" class="card mt-4 p-3 border shadow-sm" style="display:none;">
-            <h5 id="parentResultTitle" class="fw-bold mb-2"></h5>
-            <div id="parentResultDetails" class="small text-muted"></div>
+      <!-- PWA Install Button (Android / Desktop Chrome) -->
+      <button id="install-pwa-btn" style="display: none;" class="btn btn-purple w-100 fw-bold py-2 mb-3 rounded-3 shadow-sm">
+        <i class="fa-solid fa-download me-2"></i>Add to Home Screen (Install App)
+      </button>
+
+      <!-- iOS Safari Install Helper -->
+      <div id="ios-install-hint" style="display: none;" class="alert alert-primary py-2 px-3 small text-center mb-3 rounded-3">
+        <strong><i class="fa-solid fa-mobile-screen me-1"></i> Install on iPhone:</strong><br>
+        Tap <strong>Share</strong> <i class="fa-solid fa-arrow-up-from-bracket"></i> in Safari, then tap <strong>"Add to Home Screen"</strong>.
+      </div>
+
+      <!-- STEP 1: LRN LOGIN VIEW -->
+      <div id="parent-login-box">
+        <div class="mb-3">
+          <label for="parent-lrn-input" class="form-label fw-bold small text-uppercase text-muted">Learner Reference Number (LRN)</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fa-solid fa-id-card text-muted"></i></span>
+            <input type="text" id="parent-lrn-input" inputmode="numeric" maxlength="12" class="form-control form-control-lg fs-6" placeholder="Enter 12-digit Student LRN" />
           </div>
         </div>
+
+        <button id="trackBtn" onclick="startParentTracking()" class="btn btn-dark w-100 fw-bold py-2.5 rounded-3">
+          <i class="fa-solid fa-satellite-dish me-2"></i>Track Student Live
+        </button>
+
+        <div id="login-error" class="alert alert-danger py-2 px-3 small mt-3 mb-0 text-center" style="display: none;"></div>
+
+        <div class="text-center mt-4 pt-3 border-top">
+          <a href="index.html" class="text-decoration-none text-muted small">
+            <i class="fa-solid fa-arrow-left me-1"></i>Back to School Portal
+          </a>
+        </div>
       </div>
+
+      <!-- STEP 2: LIVE TRACKING VIEW -->
+      <div id="parent-live-status" style="display: none;">
+
+        <!-- Live Listener & Alert Toggle Bar -->
+        <div class="d-flex justify-content-between align-items-center bg-success-subtle border border-success-subtle rounded-3 px-3 py-2 mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="pulse-dot"></span>
+            <span class="small fw-bold text-success">Live Listener Active</span>
+          </div>
+          <button id="notif-btn" onclick="enableNotifications()" class="btn btn-sm btn-success fw-semibold py-1 px-2">
+            <i class="fa-solid fa-bell me-1"></i>Enable Alerts
+          </button>
+        </div>
+
+        <!-- Student Profile Card -->
+        <div class="bg-light border rounded-3 p-3 mb-3">
+          <div class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Monitored Student</div>
+          <h5 id="student-name-display" class="fw-bold text-dark mb-1">Loading...</h5>
+          <div id="student-meta-display" class="small text-muted">LRN: --</div>
+        </div>
+
+        <!-- Today's Live Status Card -->
+        <div class="border border-purple rounded-3 p-3 mb-3 bg-purple-soft">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-uppercase fw-bold text-purple" style="font-size: 0.72rem;">Today's Campus Status (<span id="today-date-label"></span>)</span>
+            <span id="today-badge" class="badge bg-secondary">Waiting</span>
+          </div>
+          <div id="today-activity-summary" class="small text-dark fw-semibold">
+            No scans recorded yet today.
+          </div>
+        </div>
+
+        <!-- Recent Scan Logs -->
+        <div class="mb-3">
+          <h6 class="text-uppercase fw-bold text-muted mb-2" style="font-size: 0.75rem;">Recent Attendance Logs</h6>
+          <div id="scan-history-list" class="list-group list-group-flush border rounded-3" style="max-height: 220px; overflow-y: auto;">
+            <div class="list-group-item text-center text-muted small py-3">Waiting for scan data...</div>
+          </div>
+        </div>
+
+        <!-- Stop Tracking Button -->
+        <button onclick="stopParentTracking()" class="btn btn-outline-secondary w-100 btn-sm fw-semibold py-2 rounded-3">
+          <i class="fa-solid fa-right-from-bracket me-1"></i>Change Student LRN
+        </button>
+
+      </div>
+
     </div>
   </div>
 
-  <!-- Firebase Modular SDK -->
+  <!-- Firebase Modular SDK (Matches index.html) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCX2FA_ChJAzPQPNNIFKKXqb0aCFTHZYGsA",
@@ -72,51 +156,230 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.checkParentChildStatus = async function() {
-      const lrn = document.getElementById('parentLRNInput').value.trim();
-      const resultCard = document.getElementById('parentResultCard');
-      const resultTitle = document.getElementById('parentResultTitle');
-      const resultDetails = document.getElementById('parentResultDetails');
+    let unsubscribeLogs = null;
+    let initialSnapshotDone = false;
+    let currentStudentName = "Your Child";
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateNotifButtonState();
+      const savedLrn = localStorage.getItem('atlas_parent_lrn');
+      if (savedLrn) {
+        document.getElementById('parent-lrn-input').value = savedLrn;
+        window.startParentTracking();
+      }
+    });
+
+    window.startParentTracking = async function() {
+      const lrn = document.getElementById('parent-lrn-input').value.trim();
+      const errorBox = document.getElementById('login-error');
+      const trackBtn = document.getElementById('trackBtn');
 
       if (!lrn) {
-        alert('Please enter your child’s LRN.');
+        errorBox.textContent = "Please enter your child's LRN.";
+        errorBox.style.display = 'block';
         return;
       }
 
-      resultCard.style.display = 'block';
-      resultCard.className = "card mt-4 p-3 border shadow-sm bg-light";
-      resultTitle.className = "fw-bold mb-2 text-secondary";
-      resultTitle.innerText = "Checking database...";
-      resultDetails.innerText = "Please wait while we verify your child's attendance...";
+      errorBox.style.display = 'none';
+      trackBtn.disabled = true;
+      trackBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connecting...';
 
-      const studentDoc = await getDoc(doc(db, "students", lrn));
-      if (!studentDoc.exists()) {
-        resultCard.className = "card mt-4 p-3 border border-danger shadow-sm bg-danger-subtle";
-        resultTitle.className = "fw-bold mb-2 text-danger";
-        resultTitle.innerText = "LRN Not Found";
-        resultDetails.innerText = `No student registered with LRN: ${lrn}. Please check the number or contact your adviser.`;
-        return;
-      }
+      try {
+        // Verify student exists in "students" collection
+        const stSnap = await getDoc(doc(db, "students", lrn));
+        if (!stSnap.exists()) {
+          errorBox.textContent = "No student found with that LRN. Please verify with the adviser.";
+          errorBox.style.display = 'block';
+          trackBtn.disabled = false;
+          trackBtn.innerHTML = '<i class="fa-solid fa-satellite-dish me-2"></i>Track Student Live';
+          return;
+        }
 
-      const studentData = studentDoc.data();
-      const today = new Date().toISOString().split('T')[0];
+        const stData = stSnap.data();
+        currentStudentName = stData.name || "Registered Student";
+        localStorage.setItem('atlas_parent_lrn', lrn);
 
-      const q = query(collection(db, "attendance_logs"), where("lrn", "==", lrn), where("date", "==", today));
-      const logSnap = await getDocs(q);
+        // Switch UI to Live Dashboard
+        document.getElementById('parent-login-box').style.display = 'none';
+        document.getElementById('parent-live-status').style.display = 'block';
+        document.getElementById('student-name-display').textContent = currentStudentName;
+        document.getElementById('student-meta-display').textContent = `LRN: ${lrn} | ${stData.grade || ''} - ${stData.section || ''} (${stData.sy || ''})`;
 
-      if (!logSnap.empty) {
-        let logData = logSnap.docs[0].data();
-        resultCard.className = "card mt-4 p-3 border border-success shadow-sm bg-success-subtle";
-        resultTitle.className = "fw-bold mb-2 text-success";
-        resultTitle.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> SAFE ON CAMPUS`;
-        resultDetails.innerHTML = `<strong>Student Name:</strong> ${studentData.name}<br><strong>Section:</strong> ${studentData.section}<br><strong>Status:</strong> <span class="text-success fw-bold">PRESENT</span><br><strong>Time Arrived:</strong> ${logData.timeStr}`;
-      } else {
-        resultCard.className = "card mt-4 p-3 border border-warning shadow-sm bg-warning-subtle";
-        resultTitle.className = "fw-bold mb-2 text-dark";
-        resultTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> NOT YET SCANNED TODAY`;
-        resultDetails.innerHTML = `<strong>Student Name:</strong> ${studentData.name}<br><strong>Section:</strong> ${studentData.section}<br><strong>Status:</strong> <span class="text-danger fw-bold">ABSENT / NOT YET ARRIVED</span><br><em class="text-muted">Your child has not scanned their QR code at the entrance scanner yet today.</em>`;
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('today-date-label').textContent = todayStr;
+
+        if (unsubscribeLogs) unsubscribeLogs();
+        initialSnapshotDone = false;
+
+        // Real-time listener on "attendance_logs"
+        const logsQuery = query(collection(db, "attendance_logs"), where("lrn", "==", lrn));
+        unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
+          const allLogs = [];
+          snapshot.forEach(d => allLogs.push({ id: d.id, ...d.data() }));
+
+          // Sort newest date and timestamp first
+          allLogs.sort((a, b) => {
+            if (a.date !== b.date) return (b.date || "").localeCompare(a.date || "");
+            const tA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+            const tB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+            return tB - tA;
+          });
+
+          renderLogs(allLogs, todayStr);
+
+          // Notify on real-time Time-In or Time-Out changes
+          if (initialSnapshotDone) {
+            snapshot.docChanges().forEach((change) => {
+              const log = change.doc.data();
+              if (change.type === "added") {
+                triggerBrowserNotification(
+                  `Campus Time-In (${log.session})`,
+                  `${currentStudentName} scanned IN at ${log.timeStr}.`
+                );
+              } else if (change.type === "modified" && log.timeOutStr) {
+                triggerBrowserNotification(
+                  `Campus Time-Out (${log.session})`,
+                  `${currentStudentName} scanned OUT at ${log.timeOutStr}.`
+                );
+              }
+            });
+          }
+          initialSnapshotDone = true;
+        }, (err) => {
+          console.error("Firestore listener error:", err);
+        });
+
+      } catch (err) {
+        console.error(err);
+        errorBox.textContent = "Error connecting to database. Check your internet connection.";
+        errorBox.style.display = 'block';
+      } finally {
+        trackBtn.disabled = false;
+        trackBtn.innerHTML = '<i class="fa-solid fa-satellite-dish me-2"></i>Track Student Live';
       }
     };
+
+    function renderLogs(logs, todayStr) {
+      const todayLogs = logs.filter(l => l.date === todayStr);
+      const badgeEl = document.getElementById('today-badge');
+      const summaryEl = document.getElementById('today-activity-summary');
+      const historyEl = document.getElementById('scan-history-list');
+
+      if (todayLogs.length > 0) {
+        badgeEl.className = "badge bg-success";
+        badgeEl.textContent = "On Campus / Scanned";
+        summaryEl.innerHTML = todayLogs.map(l => `
+          <div class="mb-1">
+            <span class="badge bg-primary me-1">${l.session}</span>
+            <strong>In:</strong> ${l.timeStr || '--'} 
+            ${l.timeOutStr ? `<span class="ms-2 text-danger"><strong>Out:</strong> ${l.timeOutStr}</span>` : '<span class="ms-2 text-muted">(In Class)</span>'}
+          </div>
+        `).join('');
+      } else {
+        badgeEl.className = "badge bg-secondary";
+        badgeEl.textContent = "No Scan Today";
+        summaryEl.textContent = "No arrival scan recorded for today yet.";
+      }
+
+      if (logs.length === 0) {
+        historyEl.innerHTML = '<div class="list-group-item text-center text-muted small py-3">No attendance records found yet.</div>';
+        return;
+      }
+
+      historyEl.innerHTML = logs.slice(0, 15).map(l => `
+        <div class="list-group-item px-3 py-2 small">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="text-dark">${l.date} (${l.session})</strong>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">Present</span>
+          </div>
+          <div class="text-muted mt-1" style="font-size: 0.78rem;">
+            <i class="fa-solid fa-right-to-bracket text-success me-1"></i>In: <strong>${l.timeStr || '--'}</strong>
+            <span class="mx-2">|</span>
+            <i class="fa-solid fa-right-from-bracket text-danger me-1"></i>Out: <strong>${l.timeOutStr || '--'}</strong>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.stopParentTracking = function() {
+      if (unsubscribeLogs) {
+        unsubscribeLogs();
+        unsubscribeLogs = null;
+      }
+      localStorage.removeItem('atlas_parent_lrn');
+      document.getElementById('parent-live-status').style.display = 'none';
+      document.getElementById('parent-login-box').style.display = 'block';
+      document.getElementById('parent-lrn-input').value = '';
+    };
+
+    window.enableNotifications = function() {
+      if (!("Notification" in window)) {
+        alert("Notifications are not supported on this browser.");
+        return;
+      }
+      Notification.requestPermission().then((perm) => {
+        updateNotifButtonState();
+        if (perm === "granted") {
+          triggerBrowserNotification("Atlas Alerts Enabled", `You will receive instant alerts when ${currentStudentName} scans at school.`);
+        }
+      });
+    };
+
+    function updateNotifButtonState() {
+      const btn = document.getElementById('notif-btn');
+      if (!btn || !("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        btn.className = "btn btn-sm btn-outline-success fw-semibold py-1 px-2";
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Alerts On';
+      }
+    }
+
+    function triggerBrowserNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, { body });
+          });
+        } else {
+          new Notification(title, { body });
+        }
+      }
+    }
+  </script>
+
+  <!-- PWA Service Worker & Add to Home Screen Script -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW error:', err));
+      });
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-pwa-btn');
+    const iosHint = document.getElementById('ios-install-hint');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
+    if (isIos && !isStandalone) {
+      iosHint.style.display = 'block';
+    }
   </script>
 </body>
 </html>
