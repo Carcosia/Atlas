@@ -1,5 +1,5 @@
 const CACHE_NAME = 'atlas-parent-v1';
-const ASSETS = ['/parent.html', '/manifest.json'];
+const ASSETS = ['./parent.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
